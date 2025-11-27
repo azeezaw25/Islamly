@@ -1,0 +1,1793 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Islamic Guidebook</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Inter:wght@400;500;600;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+        h1, h2, h3, .arabic-text { font-family: 'Amiri', serif; }
+
+        /* Smooth fade transition */
+        .fade-in { animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Custom Scrollbar */
+        .custom-scroll::-webkit-scrollbar { width: 6px; }
+        .custom-scroll::-webkit-scrollbar-track { background: #f1f1f1; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .custom-scroll::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        /* Compass Animation */
+        .compass-spin { animation: spin 4s infinite linear; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body class="text-slate-800 h-screen flex flex-col overflow-hidden">
+
+    <div id="app-root" class="flex-1 flex flex-col h-full relative"></div>
+
+    <script>
+        // --- DATA STORE ---
+
+        const PROPHETS_LIST_25 = [
+            { id: 'adam', title: 'Adam (آدم)' }, { id: 'idris', title: 'Idris (إدريس)' }, { id: 'nuh', title: 'Nuh (نوح)' },
+            { id: 'hud', title: 'Hud (هود)' }, { id: 'salih', title: 'Salih (صالح)' }, { id: 'ibrahim', title: 'Ibrahim (إبراهيم)' },
+            { id: 'lut', title: 'Lut (لوط)' }, { id: 'ismail', title: 'Ismail (إسماعيل)' }, { id: 'ishaq', title: 'Ishaq (إسحاق)' },
+            { id: 'yaqub', title: 'Yaqub (يعقوب)' }, { id: 'yusuf', title: 'Yusuf (يوسف)' }, { id: 'ayyub', title: 'Ayyub (أيوب)' },
+            { id: 'shuaib', title: 'Shuaib (شعيب)' }, { id: 'musa', title: 'Musa (موسى)' }, { id: 'harun', title: 'Harun (هارون)' },
+            { id: 'dhulkifl', title: 'Dhul-Kifl (ذو الكفل)' }, { id: 'dawud', title: 'Dawud (داود)' }, { id: 'sulaiman', title: 'Sulaiman (سليمان)' },
+            { id: 'ilyas', title: 'Ilyas (إلياس)' }, { id: 'alysah', title: 'Al-Yasa\' (اليسع)' }, { id: 'yunus', title: 'Yunus (يونس)' },
+            { id: 'zakariyya', title: 'Zakariyya (زكريا)' }, { id: 'yahya', title: 'Yahya (يحيى)' }, { id: 'isa', title: 'Isa (عيسى)' },
+            { id: 'muhammad', title: 'Muhammad (محمد)' },
+        ];
+
+        const TOPICS = [
+            {
+                id: 'aqidah', title: 'Aqidah', subtitle: 'The Foundation of Belief',
+                desc: 'Explore the six articles of faith (Iman) and the core theology of Islam.',
+                icon: '<svg xmlns="http://www.w3.org/2000/svg" class="w-12 h-12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>',
+                color: 'bg-emerald-600', lightColor: 'bg-emerald-50', textColor: 'text-emerald-700'
+            },
+            {
+                id: 'ibadah', title: 'Ibadah', subtitle: 'Acts of Worship',
+                desc: 'Learn about the Five Pillars: Prayer, Fasting, Zakat, and Hajj.',
+                icon: '<svg xmlns="http://www.w3.org/2000/svg" class="w-12 h-12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22V4c0-1.1.9-2 2-2h4c1.1 0 2 .9 2 2v18"/><path d="M12 7h6a2 2 0 0 1 2 2v13"/><path d="M18 10h-2"/><path d="M18 14h-2"/><path d="M18 18h-2"/><path d="M16 10v4"/></svg>',
+                color: 'bg-amber-600', lightColor: 'bg-amber-50', textColor: 'text-amber-700'
+            },
+            {
+                id: 'seerah', title: 'Seerah', subtitle: 'History & Biography',
+                desc: 'The life of Prophet Muhammad (PBUH) and the history of revelation.',
+                icon: '<svg xmlns="http://www.w3.org/2000/svg" class="w-12 h-12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V4"/><path d="M8 8h8"/><path d="M8 12h8"/><path d="M8 16h8"/></svg>',
+                color: 'bg-sky-700', lightColor: 'bg-sky-50', textColor: 'text-sky-700'
+            },
+            {
+                id: 'anbiya', title: 'Prophets (Anbiya)', subtitle: 'Stories of the Messengers',
+                desc: 'Detailed narratives of the 25 prophets mentioned in the Quran.',
+                icon: '<svg xmlns="http://www.w3.org/2000/svg" class="w-12 h-12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-11H9v6h2zm3-3H12v6h2z"/><path d="M12 17c-2.42 0-3.32-.97-4.47-2.12C7.03 13.53 6 12.63 6 11c0-1.1.9-2 2-2h8c1.1 0 2 .9 2 2 0 1.63-1.03 2.53-1.53 3.88-1.15 1.15-2.05 2.12-4.47 2.12z"/></svg>',
+                color: 'bg-rose-600', lightColor: 'bg-rose-50', textColor: 'text-rose-700'
+            },
+            {
+                id: 'personalities', title: 'Personalities', subtitle: 'Legacy of the Righteous',
+                desc: 'Biographies of the Companions, Scholars, Scientists, Leaders, and Mystics.',
+                icon: '<svg xmlns="http://www.w3.org/2000/svg" class="w-12 h-12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>',
+                color: 'bg-violet-600', lightColor: 'bg-violet-50', textColor: 'text-violet-700'
+            },
+            {
+                id: 'tools', title: 'Tools & Lifestyle', subtitle: 'Daily Islamic Utilities',
+                desc: 'Prayer times, Qibla, Quran, Zakat Calculator, and more.',
+                icon: '<svg xmlns="http://www.w3.org/2000/svg" class="w-12 h-12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
+                color: 'bg-teal-600', lightColor: 'bg-teal-50', textColor: 'text-teal-700'
+            }
+        ];
+
+        const SUBTOPICS = {
+            aqidah: [
+                { id: 'allah', title: 'Belief in Allah (Tawhid)' },
+                { id: 'angels', title: 'Belief in Angels (Mala\'ikah)' },
+                { id: 'books', title: 'Belief in Divine Books (Kutub)' },
+                { id: 'messengers', title: 'Belief in Messengers (Rusul)' },
+                { id: 'judgment', title: 'Day of Judgment (Akhirah)' },
+                { id: 'qadr', title: 'Divine Decree (Al-Qadr)' }
+            ],
+            ibadah: [
+                { id: 'shahada', title: 'The Declaration (Shahada)' },
+                { id: 'salah', title: 'The Prayer (Salah)' },
+                { id: 'zakat', title: 'Charity (Zakat)' },
+                { id: 'sawm', title: 'Fasting (Sawm)' },
+                { id: 'hajj', title: 'Pilgrimage (Hajj)' }
+            ],
+            seerah: [
+                { id: 'mecca', title: 'The Meccan Period' },
+                { id: 'madina', title: 'The Madinan Period' },
+                { id: 'battles', title: 'Major Events & Battles' }
+            ],
+            anbiya: PROPHETS_LIST_25.map(p => ({ id: p.id, title: p.title })),
+            personalities: [
+                { id: 'religious_figures', title: 'Religious & Early Figures' },
+                { id: 'scholars', title: 'Scholars & Scientists' },
+                { id: 'leaders', title: 'Military & Political Leaders' },
+                { id: 'mystics', title: 'Mystics & Poets' }
+            ],
+            tools: [
+                { id: 'prayer_times', title: 'Prayer Times & Athan' },
+                { id: 'qibla', title: 'Qibla Compass' },
+                { id: 'quran', title: 'Quran Reader' },
+                { id: 'calendar', title: 'Islamic Calendar' },
+                { id: 'duas', title: 'Duas & Zikr' },
+                { id: 'events', title: 'Islamic Events' },
+                { id: 'zakat_calc', title: 'Zakat Calculator' },
+                { id: 'halal', title: 'Halal Scanner' }
+            ]
+        };
+
+        // --- CONTENT TEMPLATES ---
+
+        const generateProphetContent = (englishName, arabicName, otherReligionName, otherReligionInfo, story, quranRef, quranText, timeline) => {
+            const topicColorClass = 'text-rose-600';
+            const topicLightBg = 'bg-rose-50';
+
+            const timelineHtml = timeline.map((item, index) => `
+                <li class="mb-4 ms-6">
+                    <span class="absolute flex items-center justify-center w-6 h-6 bg-rose-100 rounded-full -start-3 ring-8 ring-white">
+                        <span class="text-rose-600 text-sm font-bold">${index + 1}</span>
+                    </span>
+                    <h4 class="font-semibold text-slate-900">${item.title}</h4>
+                    <p class="text-sm text-slate-600">${item.description}</p>
+                </li>
+            `).join('');
+
+            return `
+                <h2 class="text-3xl font-bold text-slate-800 mb-6 border-b pb-4">Prophet ${englishName} <span class="arabic-text text-xl ml-2 text-slate-500">(${arabicName})</span></h2>
+                <div class="space-y-6">
+                    <div class="${topicLightBg} p-6 rounded-xl border-l-4 border-rose-500">
+                        <p class="text-lg">${story.intro}</p>
+                    </div>
+
+                    <div class="p-4 bg-white shadow rounded-lg border border-slate-200">
+                        <h3 class="font-bold ${topicColorClass} mb-2">Appearance in Other Religions</h3>
+                        <p class="text-sm text-slate-600">In <strong>Judaism and Christianity</strong>, he is known as **${otherReligionName}**. ${otherReligionInfo}</p>
+                    </div>
+
+                    <h3 class="text-2xl text-slate-700 mt-8">The Narrative</h3>
+                    ${story.details.map(p => `<p class="text-md text-slate-700 mb-4">${p}</p>`).join('')}
+
+                    <h3 class="text-2xl text-slate-700 pt-6 mt-8 border-t">Quranic Reference</h3>
+                    <div class="mt-4 bg-slate-800 text-white p-6 rounded-xl text-center">
+                        <p class="arabic-text text-3xl mb-4 leading-relaxed">${quranText}</p>
+                        <p class="text-lg italic">"${quranRef.quote}"</p>
+                        <p class="text-sm text-slate-400 mt-2">— ${quranRef.surah}</p>
+                    </div>
+
+                    <h3 class="text-2xl font-bold text-slate-800 mt-8 mb-4">Timeline of Prophet ${englishName}'s Life</h3>
+                    <ol class="relative border-s border-rose-200 ms-3 space-y-4">
+                        ${timelineHtml}
+                    </ol>
+                </div>
+            `;
+        };
+
+        const generatePersonalityCard = (name, title, desc, contribution) => `
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 hover:shadow-md transition duration-300">
+                <div class="flex items-start justify-between mb-2">
+                    <h3 class="text-xl font-bold text-violet-800">${name}</h3>
+                    ${title ? `<span class="bg-violet-100 text-violet-700 text-xs px-2 py-1 rounded-full font-medium">${title}</span>` : ''}
+                </div>
+                <p class="text-slate-700 mb-3 text-sm leading-relaxed">${desc}</p>
+                <div class="mt-4 pt-3 border-t border-slate-100">
+                     <p class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">Key Contribution</p>
+                     <p class="text-sm text-slate-800 font-medium">${contribution}</p>
+                </div>
+            </div>`;
+
+        // --- DETAILED PROPHET DATA (ALL 25) ---
+
+        const prophetAdam = {
+            englishName: 'Adam', arabicName: 'آدم', otherReligionName: 'Adam',
+            otherReligionInfo: 'The central difference in Islam is that Adam\'s error was forgiven by God upon sincere repentance, and Muslims do not inherit "original sin".',
+            story: {
+                intro: 'Prophet Adam (AS) is the father of all humanity and the first prophet. His story is one of creation, testing, repentance, and the first vicegerency on Earth.',
+                details: [
+                    'Allah created Adam from clay and breathed the spirit into him. He taught Adam the names of all things. When the Angels were commanded to prostrate to Adam, they obeyed, except for Iblis (Satan), who refused out of arrogance.',
+                    'Adam and his wife Hawa (Eve) were placed in Paradise but were forbidden from a specific tree. Tempted by Satan, they disobeyed. Crucially, they immediately regretted their actions and sought forgiveness, which Allah granted, teaching humanity the power of repentance.'
+                ]
+            },
+            quranRef: { quote: 'And He taught Adam the names - all of them.', surah: 'Surah Al-Baqarah 2:31' },
+            quranText: 'وَعَلَّمَ آدَمَ الْأَسْمَاءَ كُلَّهَا',
+            timeline: [
+                { title: 'Creation', description: 'Created from clay; Angels prostrate, Iblis refuses.' },
+                { title: 'The Test', description: 'Adam and Hawa dwell in Paradise but eat from the forbidden tree.' },
+                { title: 'Descent', description: 'Sent to Earth as the first Khalifah (Vicegerent) after being forgiven.' }
+            ]
+        };
+
+        const prophetIdris = {
+            englishName: 'Idris', arabicName: 'إدريس', otherReligionName: 'Enoch',
+            otherReligionInfo: 'Known in Biblical tradition for "walking with God" and being taken up to heaven. Islam honors him as a trustworthy man of truth.',
+            story: {
+                intro: 'Prophet Idris (AS) was a man of truth and sincerity, born generations after Adam. He is often credited with being the first to write with a pen and study the stars.',
+                details: [
+                    'Idris called his people back to the worship of Allah after they began slipping into idolatry. He was known for his wisdom and high status.',
+                    'The Quran describes him as a man of truth and patience. Allah "raised him to a high station," which many scholars interpret as a physical ascension to the heavens or a high spiritual rank.'
+                ]
+            },
+            quranRef: { quote: 'And mention in the Book, Idris. Indeed, he was a man of truth and a prophet.', surah: 'Surah Maryam 19:56' },
+            quranText: 'وَاذْكُرْ فِي الْكِتَابِ إِدْرِيسَ ۚ إِنَّهُ كَانَ صِدِّيقًا نَّبِيًّا',
+            timeline: [
+                { title: 'Mission', description: 'Called his people to righteousness and monotheism.' },
+                { title: 'Innovation', description: 'Traditionally credited with introducing writing and sewing.' },
+                { title: 'Ascension', description: 'Raised to a "high station" by Allah.' }
+            ]
+        };
+
+        const prophetNuh = {
+            englishName: 'Nuh', arabicName: 'نوح', otherReligionName: 'Noah',
+            otherReligionInfo: 'The story of the Ark is shared, but Islam emphasizes that Nuh\'s son was a disbeliever and was not saved, highlighting that faith transcends lineage.',
+            story: {
+                intro: 'Prophet Nuh (AS) is one of the five greatest messengers (Ulul Azm). He spent 950 years calling his people to abandon idol worship.',
+                details: [
+                    'Nuh preached tirelessly, but his people mocked him. When their arrogance reached its peak, Allah commanded Nuh to build an Ark.',
+                    'The Great Flood wiped out the disbelievers, including Nuh\'s own son who refused to board. The Ark settled on Mount Judi, and Nuh became the "Second Father of Humanity".'
+                ]
+            },
+            quranRef: { quote: 'Indeed, We sent Noah to his people...', surah: 'Surah Nuh 71:1' },
+            quranText: 'إِنَّا أَرْسَلْنَا نُوحًا إِلَىٰ قَوْمِهِ',
+            timeline: [
+                { title: 'The Call', description: 'Preached for 950 years to the people of idols (Wadd, Suwa, etc).' },
+                { title: 'The Ark', description: 'Constructed the ship under Divine inspiration.' },
+                { title: 'The Flood', description: 'Water gushed from the earth and sky; believers were saved.' }
+            ]
+        };
+
+        const prophetHud = {
+            englishName: 'Hud', arabicName: 'هود', otherReligionName: 'Eber (possibly)',
+            otherReligionInfo: 'Hud is not explicitly mentioned by name in the Bible, though some scholars associate him with Eber, an ancestor of Abraham.',
+            story: {
+                intro: 'Prophet Hud (AS) was sent to the people of \'Aad, an ancient Arab tribe known for their physical strength and massive architectural structures with lofty pillars.',
+                details: [
+                    'The people of \'Aad lived in Iram of the Pillars. They were arrogant about their power, saying "Who is greater than us in strength?" and worshipped idols.',
+                    'Hud warned them that their strength was a gift from Allah, but they mocked him. Allah punished them with a screaming, violent wind that lasted seven nights and eight days, leaving them like hollow palm trunks.'
+                ]
+            },
+            quranRef: { quote: 'And to \'Aad [We sent] their brother Hud. He said, "O my people, worship Allah..."', surah: 'Surah Al-A\'raf 7:65' },
+            quranText: 'وَإِلَىٰ عَادٍ أَخَاهُمْ هُودًا ۗ قَالَ يَا قَوْمِ اعْبُدُوا اللَّهَ',
+            timeline: [
+                { title: 'Mission to \'Aad', description: 'Sent to the powerful civilization of Iram.' },
+                { title: 'Rejection', description: 'The people boasted of their might and buildings.' },
+                { title: 'The Wind', description: 'Destroyed by a fierce, freezing wind (Sarsar).' }
+            ]
+        };
+
+        const prophetSalih = {
+            englishName: 'Salih', arabicName: 'صالح', otherReligionName: 'Shelah (possibly)',
+            otherReligionInfo: 'Like Hud, Salih is an ancient Arab prophet not explicitly detailed in the Bible.',
+            story: {
+                intro: 'Prophet Salih (AS) was sent to the people of Thamud (Madyan), who carved magnificent homes out of mountains. They succeeded the people of \'Aad.',
+                details: [
+                    'The people demanded a miracle: a she-camel to emerge from a solid rock. By Allah\'s permission, it happened. Salih warned them to let the camel drink and graze freely.',
+                    'The people grew arrogant and hamstrung (killed) the camel. Salih warned them they had three days to live. A mighty blast (sayhah) and earthquake overtook them, leaving them dead in their homes.'
+                ]
+            },
+            quranRef: { quote: 'And to Thamud [We sent] their brother Salih...', surah: 'Surah Hud 11:61' },
+            quranText: 'وَإِلَىٰ ثَمُودَ أَخَاهُمْ صَالِحًا',
+            timeline: [
+                { title: 'Mission to Thamud', description: 'Sent to the rock-carvers of Al-Hijr.' },
+                { title: 'The Miracle', description: 'The She-Camel emerges from the rock as a sign.' },
+                { title: 'The Destruction', description: 'They killed the camel and were destroyed by a blast.' }
+            ]
+        };
+
+        const prophetIbrahim = {
+            englishName: 'Ibrahim', arabicName: 'إبراهيم', otherReligionName: 'Abraham',
+            otherReligionInfo: 'The Patriarch of monotheism. Islam emphasizes his rebuilding of the Kaaba and the sacrifice involving Ismail (Ishmael), not Isaac.',
+            story: {
+                intro: 'Prophet Ibrahim (AS) is the Khalil-ullah (Friend of Allah). He challenged his father\'s idolatry and the tyrant Nimrod.',
+                details: [
+                    'He used logic to prove the oneness of God (stars, moon, sun argument). He smashed the idols of his people and survived the great fire they threw him into.',
+                    'He left his wife Hagar and son Ismail in Mecca by Allah\'s command. Later, he returned to rebuild the Kaaba with Ismail and passed the ultimate test of being willing to sacrifice his son.'
+                ]
+            },
+            quranRef: { quote: 'Abraham was neither a Jew nor a Christian, but he was one inclined to truth, a Muslim.', surah: 'Surah Ali \'Imran 3:67' },
+            quranText: 'مَا كَانَ إِبْرَاهِيمُ يَهُودِيًّا وَلَا نَصْرَانِيًّا وَلَٰكِن كَانَ حَنِيفًا مُّسْلِمًا',
+            timeline: [
+                { title: 'The Fire', description: 'Thrown into the fire by Nimrod; saved by Allah.' },
+                { title: 'Settlement', description: 'Leaves Hagar and Ismail in Mecca.' },
+                { title: 'The Sacrifice', description: 'Prepared to sacrifice Ismail; redeemed by a ram.' },
+                { title: 'The Kaaba', description: 'Rebuilds the Holy House with his son.' }
+            ]
+        };
+
+        const prophetLut = {
+            englishName: 'Lut', arabicName: 'لوط', otherReligionName: 'Lot',
+            otherReligionInfo: 'Islam views Lut as a prophet, not just a righteous man. The Quran strongly condemns the immorality of his people.',
+            story: {
+                intro: 'Prophet Lut (AS) was the nephew of Ibrahim. He was sent to the cities of Sodom and Gomorrah.',
+                details: [
+                    'His people practiced public immorality and highway robbery. Lut preached purity and hospitality, but they rejected him.',
+                    'Angels visited Lut in human form. His people tried to attack them. The angels blinded the attackers and told Lut to leave at night. The city was flipped upside down and rained upon with stones. His wife, who supported the corrupt people, was destroyed.'
+                ]
+            },
+            quranRef: { quote: 'And [We sent] Lot, when he said to his people, "Do you commit immorality while you see?"', surah: 'Surah An-Naml 27:54' },
+            quranText: 'وَلُوطًا إِذْ قَالَ لِقَوْمِهِ أَتَأْتُونَ الْفَاحِشَةَ وَأَنتُمْ تُبْصِرُونَ',
+            timeline: [
+                { title: 'Migration', description: 'Traveled with Ibrahim before settling in Sodom.' },
+                { title: 'The Warning', description: 'Warned against homosexuality and vice.' },
+                { title: 'The Punishment', description: 'City overturned and stoned; wife perished.' }
+            ]
+        };
+
+        const prophetIsmail = {
+            englishName: 'Ismail', arabicName: 'إسماعيل', otherReligionName: 'Ishmael',
+            otherReligionInfo: 'The firstborn of Abraham. Islam honors him as the sacrificial son (Zabi-ullah) and the ancestor of Prophet Muhammad.',
+            story: {
+                intro: 'Prophet Ismail (AS) was the son of Ibrahim and Hagar. His infancy in the desert of Mecca led to the miracle of Zamzam water.',
+                details: [
+                    'As a boy, he displayed ultimate submission when his father told him of the dream to sacrifice him, saying "Do as you are commanded." Allah replaced him with a ram.',
+                    'He helped his father build the Kaaba and is the grandfather of the Arabs (Adnanites) and the lineage of Prophet Muhammad (ﷺ).'
+                ]
+            },
+            quranRef: { quote: 'And mention in the Book, Ishmael. Indeed, he was true to his promise and was a messenger and a prophet.', surah: 'Surah Maryam 19:54' },
+            quranText: 'وَاذْكُرْ فِي الْكِتَابِ إِسْمَاعِيلَ ۚ إِنَّهُ كَانَ صَادِقَ الْوَعْدِ وَكَانَ رَسُولًا نَّبِيًّا',
+            timeline: [
+                { title: 'Zamzam', description: 'Water sprung from the sand for him as an infant.' },
+                { title: 'The Sacrifice', description: 'Submitted willingly to Allah\'s command.' },
+                { title: 'The Kaaba', description: 'Built the foundations of the House with Ibrahim.' }
+            ]
+        };
+
+        const prophetIshaq = {
+            englishName: 'Ishaq', arabicName: 'إسحاق', otherReligionName: 'Isaac',
+            otherReligionInfo: 'The second son of Abraham, born to Sarah. He is the patriarch of the Jewish people.',
+            story: {
+                intro: 'Prophet Ishaq (AS) was the "good news" given to Ibrahim and Sarah in their old age. He was a prophet and the father of Yaqub (Jacob).',
+                details: [
+                    'Angels on their way to destroy the people of Lut stopped to give Ibrahim the news of Ishaq\'s birth. Sarah was astonished as she was barren and elderly.',
+                    'Ishaq continued the legacy of monotheism. From his lineage came the majority of the prophets, including Moses and Jesus.'
+                ]
+            },
+            quranRef: { quote: 'And We gave him good tidings of Isaac, a prophet from among the righteous.', surah: 'Surah As-Saffat 37:112' },
+            quranText: 'وَبَشَّرْنَاهُ بِإِسْحَاقَ نَبِيًّا مِّنَ الصَّالِحِينَ',
+            timeline: [
+                { title: 'Glad Tidings', description: 'Announced by angels to Ibrahim and Sarah.' },
+                { title: 'Prophethood', description: 'Preached monotheism in the land of Canaan.' },
+                { title: 'Lineage', description: 'Father of Yaqub (Israel).' }
+            ]
+        };
+
+        const prophetYaqub = {
+            englishName: 'Yaqub', arabicName: 'يعقوب', otherReligionName: 'Jacob',
+            otherReligionInfo: 'Also known as Israel. He is the father of the 12 Tribes. His story is deeply intertwined with Joseph (Yusuf).',
+            story: {
+                intro: 'Prophet Yaqub (AS), son of Ishaq, is a symbol of profound patience (Sabr) and grief. He is the father of Yusuf.',
+                details: [
+                    'He knew of Yusuf\'s great destiny but suffered immensely when his other sons claimed a wolf ate Yusuf. He cried until he went blind from grief.',
+                    'He never lost hope in Allah\'s mercy. Eventually, he was reunited with Yusuf in Egypt, and his sight was restored by Yusuf\'s shirt.'
+                ]
+            },
+            quranRef: { quote: 'And he said, "I only complain of my suffering and my grief to Allah..."', surah: 'Surah Yusuf 12:86' },
+            quranText: 'قَالَ إِنَّمَا أَشْكُو بَثِّي وَحُزْنِي إِلَى اللَّهِ',
+            timeline: [
+                { title: 'The 12 Tribes', description: 'Father of the Asbat (Tribes of Israel).' },
+                { title: 'Separation', description: 'Lost his beloved son Yusuf for many years.' },
+                { title: 'Reunion', description: 'Moved to Egypt and reunited with Yusuf.' }
+            ]
+        };
+
+        const prophetYusuf = {
+            englishName: 'Yusuf', arabicName: 'يوسف', otherReligionName: 'Joseph',
+            otherReligionInfo: 'The Quran calls his story "The Best of Stories" (Ahsan al-Qasas). It devotes a whole chapter to his life continuously.',
+            story: {
+                intro: 'Prophet Yusuf (AS) was blessed with extreme beauty and the ability to interpret dreams. His life was a series of tests: betrayal, slavery, temptation, and power.',
+                details: [
+                    'Thrown into a well by jealous brothers, sold into slavery in Egypt, and wrongfully imprisoned after rejecting the advances of a nobleman\'s wife.',
+                    'He interpreted the King\'s dream regarding famine, became the Minister of Treasury, and eventually forgave his brothers, saying "No blame will there be upon you today."'
+                ]
+            },
+            quranRef: { quote: 'Thus did We establish Joseph in the land...', surah: 'Surah Yusuf 12:56' },
+            quranText: 'وَكَذَٰلِكَ مَكَّنَّا لِيُوسُفَ فِي الْأَرْضِ',
+            timeline: [
+                { title: 'The Well', description: 'Betrayed by brothers and thrown in a well.' },
+                { title: 'The Prison', description: 'Imprisoned for years despite innocence.' },
+                { title: 'The Power', description: 'Became Aziz of Egypt; managed the famine.' }
+            ]
+        };
+
+        const prophetAyyub = {
+            englishName: 'Ayyub', arabicName: 'أيوب', otherReligionName: 'Job',
+            otherReligionInfo: 'The ultimate archetype of patience and suffering in both Bible and Quran.',
+            story: {
+                intro: 'Prophet Ayyub (AS) was a wealthy man who was tested by Allah with the loss of his wealth, his children, and his health.',
+                details: [
+                    'He suffered from a severe illness for many years, but his tongue remained moist with the remembrance of Allah. He never complained about God, only to God.',
+                    'Allah eventually answered his prayer, instructed him to strike the ground with his foot for a healing spring, and restored his family and wealth twofold.'
+                ]
+            },
+            quranRef: { quote: 'And Job, when he called to his Lord, "Indeed, adversity has touched me, and you are the Most Merciful of the merciful."', surah: 'Surah Al-Anbya 21:83' },
+            quranText: 'وَأَيُّوبَ إِذْ نَادَىٰ رَبَّهُ أَنِّي مَسَّنِيَ الضُّرُّ وَأَنتَ أَرْحَمُ الرَّاحِمِينَ',
+            timeline: [
+                { title: 'The Test', description: 'Lost wealth, family, and health.' },
+                { title: 'Patience', description: 'Endured years of illness with gratitude.' },
+                { title: 'Restoration', description: 'Healed by cool water; wealth restored.' }
+            ]
+        };
+
+        const prophetShuaib = {
+            englishName: 'Shuaib', arabicName: 'شعيب', otherReligionName: 'Jethro',
+            otherReligionInfo: 'The father-in-law of Moses. He was known as the "Orator of the Prophets" for his eloquence.',
+            story: {
+                intro: 'Prophet Shuaib (AS) was sent to the people of Madyan (Midian). They were merchants who cheated in weights and measures and practiced highway robbery.',
+                details: [
+                    'Shuaib warned them that economic corruption leads to divine punishment. He told them not to decrease the scale and balance.',
+                    'They mocked his prayer and his message. Consequently, they were destroyed by an earthquake and a scorching heat from the sky (The Day of the Shadow).'
+                ]
+            },
+            quranRef: { quote: 'And to Madyan [We sent] their brother Shu\'ayb...', surah: 'Surah Al-A\'raf 7:85' },
+            quranText: 'وَإِلَىٰ مَدْيَنَ أَخَاهُمْ شُعَيْبًا',
+            timeline: [
+                { title: 'Mission to Madyan', description: 'Preached fair trade and monotheism.' },
+                { title: 'Economic Justice', description: 'Condemned cheating in scales.' },
+                { title: 'Destruction', description: 'Madyan destroyed by a blast and fire.' }
+            ]
+        };
+
+        const prophetMusa = {
+            englishName: 'Musa', arabicName: 'موسى', otherReligionName: 'Moses',
+            otherReligionInfo: 'The most mentioned prophet in the Quran. He received the Torah and spoke directly to Allah (Kalimullah).',
+            story: {
+                intro: 'Prophet Musa (AS) was sent to free the Children of Israel from the slavery of Pharaoh (Firawn) and guide them to Tawhid.',
+                details: [
+                    'Raised in Pharaoh\'s palace, he fled to Madyan after an accidental killing. He received prophethood at Mount Tur (Sinai).',
+                    'He confronted Pharaoh with miracles (staff, hand). He led the Exodus across the parted sea. Later, he struggled with the rebellion of his people during the wandering in the desert.'
+                ]
+            },
+            quranRef: { quote: 'And We spoke to Moses with [direct] speech.', surah: 'Surah An-Nisa 4:164' },
+            quranText: 'وَكَلَّمَ اللَّهُ مُوسَىٰ تَكْلِيمًا',
+            timeline: [
+                { title: 'The River', description: 'Placed in the Nile as a baby; adopted by Asiya.' },
+                { title: 'Mount Tur', description: 'Spoke to Allah; received mission.' },
+                { title: 'The Exodus', description: 'Sea parted; Pharaoh drowned.' },
+                { title: 'The Torah', description: 'Received the Divine Law.' }
+            ]
+        };
+
+        const prophetHarun = {
+            englishName: 'Harun', arabicName: 'هارون', otherReligionName: 'Aaron',
+            otherReligionInfo: 'The brother of Moses and the first High Priest in Biblical tradition. Islam emphasizes his prophethood and support for Musa.',
+            story: {
+                intro: 'Prophet Harun (AS) was the older brother of Musa. Musa asked Allah to make Harun his helper because Harun was more eloquent in speech.',
+                details: [
+                    'He stood by Musa against Pharaoh. When Musa went to Mount Tur for 40 days, Harun was left in charge.',
+                    'During this time, the Samaritan (As-Samiri) misled the people into worshipping a golden calf. Harun tried to stop them but was overpowered and feared causing division.'
+                ]
+            },
+            quranRef: { quote: 'And We granted him out of Our mercy his brother Aaron as a prophet.', surah: 'Surah Maryam 19:53' },
+            quranText: 'وَوَهَبْنَا لَهُ مِن رَّحْمَتِنَا أَخَاهُ هَارُونَ نَبِيًّا',
+            timeline: [
+                { title: 'Appointed', description: 'Made a prophet at Musa\'s request.' },
+                { title: 'The Calf', description: 'Tried to prevent the Israelites from idolatry.' },
+                { title: 'Death', description: 'Died shortly before Musa in the wandering.' }
+            ]
+        };
+
+        const prophetDhulkifl = {
+            englishName: 'Dhul-Kifl', arabicName: 'ذو الكفل', otherReligionName: 'Ezekiel (often identified as)',
+            otherReligionInfo: 'His identity is debated; many scholars link him to Ezekiel, while others suggest Isaiah. The name means "Possessor of a Portion/Double Reward".',
+            story: {
+                intro: 'Prophet Dhul-Kifl (AS) is mentioned twice in the Quran as a man of patience and constancy.',
+                details: [
+                    'Little is known about the specifics of his life in the Quran, but he is praised alongside Ismail and Idris.',
+                    'Tradition suggests he was a righteous leader who fasted by day and prayed by night, and never got angry, fulfilling a trust (Kifl) he made to a previous prophet to judge with justice.'
+                ]
+            },
+            quranRef: { quote: 'And [mention] Ishmael and Idris and Dhul-Kifl; all were of the patient.', surah: 'Surah Al-Anbya 21:85' },
+            quranText: 'وَإِسْمَاعِيلَ وَإِدْرِيسَ وَذَا الْكِفْلِ ۖ كُلٌّ مِّنَ الصَّابِرِينَ',
+            timeline: [
+                { title: 'Leadership', description: 'Took charge of his people, pledging to judge justly.' },
+                { title: 'Patience', description: 'Tested by Satan but remained steadfast.' }
+            ]
+        };
+
+        const prophetDawud = {
+            englishName: 'Dawud', arabicName: 'داود', otherReligionName: 'David',
+            otherReligionInfo: 'The King and Psalmist. Islam affirms he received the Zabur (Psalms) and possessed a beautiful voice.',
+            story: {
+                intro: 'Prophet Dawud (AS) was a soldier, a king, and a prophet. He defeated the giant Jalut (Goliath) and was given a kingdom by Allah.',
+                details: [
+                    'Allah softened iron for him; he could mold armor with his bare hands. He was known for his fasting (fasting every other day).',
+                    'He received the Zabur. The mountains and birds would join him in glorifying Allah when he recited.'
+                ]
+            },
+            quranRef: { quote: 'And We gave David the Zabur (Psalms).', surah: 'Surah An-Nisa 4:163' },
+            quranText: 'وَآتَيْنَا دَاوُودَ زَبُورًا',
+            timeline: [
+                { title: 'Goliath', description: 'Slayed Jalut with a sling.' },
+                { title: 'Kingship', description: 'United the tribes and ruled with justice.' },
+                { title: 'Iron', description: 'Miraculously molded iron for armor.' }
+            ]
+        };
+
+        const prophetSulaiman = {
+            englishName: 'Sulaiman', arabicName: 'سليمان', otherReligionName: 'Solomon',
+            otherReligionInfo: 'Son of David. Known for his wisdom and wealth. Islam rejects the idea that he fell into idolatry later in life.',
+            story: {
+                intro: 'Prophet Sulaiman (AS) was given a kingdom unlike any other. He had control over the wind, the Jinn, and could understand the language of animals.',
+                details: [
+                    'He marched with an army of men, jinn, and birds. He heard an ant warning its colony. He interacted with the Queen of Sheba (Bilqis), leading her to Islam without war.',
+                    'He oversaw the building of the Temple (Bayt al-Maqdis) in Jerusalem. He died while leaning on his staff, and the Jinn only realized he was dead when a termite ate through the wood.'
+                ]
+            },
+            quranRef: { quote: 'And to Solomon [We subjected] the wind...', surah: 'Surah Al-Anbya 21:81' },
+            quranText: 'وَلِسُلَيْمَانَ الرِّيحَ',
+            timeline: [
+                { title: 'Kingdom', description: 'Granted control over Jinn, wind, and animals.' },
+                { title: 'Sheba', description: 'Converted the Queen of Sheba to monotheism.' },
+                { title: 'Death', description: 'Died leaning on his staff; realized only later.' }
+            ]
+        };
+
+        const prophetIlyas = {
+            englishName: 'Ilyas', arabicName: 'إلياس', otherReligionName: 'Elijah',
+            otherReligionInfo: 'A major prophet who opposed the worship of Baal.',
+            story: {
+                intro: 'Prophet Ilyas (AS) was sent to the Children of Israel in Baalbek. They had started worshipping an idol named Baal.',
+                details: [
+                    'He called them to stop worshipping Baal and return to Allah, the Best of Creators. His people rejected him and persecuted him.',
+                    'Historically, he is associated with great miracles and being raised up, similar to the account of Idris.'
+                ]
+            },
+            quranRef: { quote: 'And indeed, Elias was from among the messengers.', surah: 'Surah As-Saffat 37:123' },
+            quranText: 'وَإِنَّ إِلْيَاسَ لَمِنَ الْمُرْسَلِينَ',
+            timeline: [
+                { title: 'Mission', description: 'Preached against the idol Baal.' },
+                { title: 'Persecution', description: 'Hunted by the tyrant king of his time.' }
+            ]
+        };
+
+        const prophetAlyasa = {
+            englishName: 'Al-Yasa\'', arabicName: 'اليسع', otherReligionName: 'Elisha',
+            otherReligionInfo: 'The successor to Elijah. Mentioned briefly in the Quran as one of the favored.',
+            story: {
+                intro: 'Prophet Al-Yasa\' (AS) succeeded Ilyas. He stayed with Ilyas and learned from him before continuing the mission to the Israelites.',
+                details: [
+                    'He is mentioned in the Quran as being "of the best" and "favored over the worlds" (in his time).',
+                    'Like other prophets of Israel, he upheld the Torah and guided the kings and common people, though they often disobeyed.'
+                ]
+            },
+            quranRef: { quote: 'And mention Ishmael and Elisha and Dhul-Kifl; all are of the best.', surah: 'Surah Sad 38:48' },
+            quranText: 'وَاذْكُرْ إِسْمَاعِيلَ وَالْيَسَعَ وَذَا الْكِفْلِ ۖ وَكُلٌّ مِّنَ الْأَخْيَارِ',
+            timeline: [
+                { title: 'Succession', description: 'Followed Ilyas in guiding the Israelites.' }
+            ]
+        };
+
+        const prophetYunus = {
+            englishName: 'Yunus', arabicName: 'يونس', otherReligionName: 'Jonah',
+            otherReligionInfo: 'Famous for the story of the whale. The Quranic title "Dhul-Nun" means "The One of the Fish".',
+            story: {
+                intro: 'Prophet Yunus (AS) was sent to the people of Nineveh (in modern Iraq). He is the only prophet whose entire community eventually believed.',
+                details: [
+                    'Frustrated by his people\'s rejection, he left without Allah\'s permission. He boarded a ship, was cast into the sea, and swallowed by a great fish/whale.',
+                    'In the belly of the whale, he called out: "La ilaha illa anta, subhanaka, inni kuntu minaz-zalimin" (There is no god but You, Glory to You, indeed I have been of the wrongdoers). Allah saved him, and his people subsequently accepted faith.'
+                ]
+            },
+            quranRef: { quote: 'And [mention] the Man of the Fish, when he went off in anger...', surah: 'Surah Al-Anbya 21:87' },
+            quranText: 'وَذَا النُّونِ إِذ ذَّهَبَ مُغَاضِبًا',
+            timeline: [
+                { title: 'Departure', description: 'Left Nineveh in anger before permission.' },
+                { title: 'The Whale', description: 'Swallowed by a fish; repented in darkness.' },
+                { title: 'Salvation', description: 'Cast ashore; 100,000+ of his people believed.' }
+            ]
+        };
+
+        const prophetZakariyya = {
+            englishName: 'Zakariyya', arabicName: 'زكريا', otherReligionName: 'Zechariah',
+            otherReligionInfo: 'A priest and the guardian of Mary (Maryam). Father of John the Baptist.',
+            story: {
+                intro: 'Prophet Zakariyya (AS) was a wise, elderly prophet who took care of Maryam in the temple.',
+                details: [
+                    'He noticed that Maryam had food out of season, which she said was from Allah. This inspired him to pray for a son, despite his wife being barren and him being very old.',
+                    'Allah answered his prayer and granted him Yahya (John). Zakariyya was eventually martyred by the corrupt leaders of his time.'
+                ]
+            },
+            quranRef: { quote: 'A mention of the mercy of your Lord to His servant Zechariah.', surah: 'Surah Maryam 19:2' },
+            quranText: 'ذِكْرُ رَحْمَتِ رَبِّكَ عَبْدَهُ زَكَرِيَّا',
+            timeline: [
+                { title: 'Guardian', description: 'Took care of Maryam in the sanctuary.' },
+                { title: 'The Prayer', description: 'Prayed secretly for an heir.' },
+                { title: 'Yahya', description: 'Given glad tidings of a son.' }
+            ]
+        };
+
+        const prophetYahya = {
+            englishName: 'Yahya', arabicName: 'يحيى', otherReligionName: 'John the Baptist',
+            otherReligionInfo: 'Known for baptizing Jesus. Islam describes him as "Chaste" and "Honorable".',
+            story: {
+                intro: 'Prophet Yahya (AS) was the son of Zakariyya. He was given wisdom while still a child and was known for his asceticism and gentleness.',
+                details: [
+                    'He announced the coming of Isa (Jesus) and supported him. He was known for weeping out of fear of Allah and never sinned.',
+                    'He was martyred (beheaded) by a tyrant king for speaking the truth against an unlawful marriage.'
+                ]
+            },
+            quranRef: { quote: '"O John, take the Scripture with determination." And We gave him judgment [while yet] a boy.', surah: 'Surah Maryam 19:12' },
+            quranText: 'يَا يَحْيَىٰ خُذِ الْكِتَابَ بِقُوَّةٍ ۖ وَآتَيْنَاهُ الْحُكْمَ صَبِيًّا',
+            timeline: [
+                { title: 'Birth', description: 'Miraculous birth to elderly parents.' },
+                { title: 'Wisdom', description: 'Given understanding of Scripture as a child.' },
+                { title: 'Martyrdom', description: 'Killed for upholding God\'s law.' }
+            ]
+        };
+
+        const prophetIsa = {
+            englishName: 'Isa', arabicName: 'عيسى', otherReligionName: 'Jesus Christ',
+            otherReligionInfo: 'The Messiah. Islam affirms the virgin birth and miracles but rejects divinity and crucifixion (believing he was raised up).',
+            story: {
+                intro: 'Prophet Isa (AS) is the Messiah, born to the Virgin Mary. He is the Spirit of God and His Word bestowed upon Mary.',
+                details: [
+                    'He spoke from the cradle to defend his mother. He healed the leper and the blind and raised the dead by Allah\'s permission.',
+                    'He received the Injil (Gospel). When the Romans/Jews plotted to kill him, Allah raised him to the heavens. He will return before the Day of Judgment to defeat the Antichrist (Dajjal).'
+                ]
+            },
+            quranRef: { quote: 'The Messiah, Jesus, the son of Mary, was but a messenger of Allah...', surah: 'Surah An-Nisa 4:171' },
+            quranText: 'إِنَّمَا الْمَسِيحُ عِيسَى ابْنُ مَرْيَمَ رَسُولُ اللَّهِ',
+            timeline: [
+                { title: 'Virgin Birth', description: 'Born without a father to Maryam.' },
+                { title: 'Miracles', description: 'Spoke in cradle; healed sick; table from heaven.' },
+                { title: 'Ascension', description: 'Raised to heaven; not crucified.' }
+            ]
+        };
+
+        const prophetMuhammad = {
+            englishName: 'Muhammad', arabicName: 'محمد', otherReligionName: 'Seal of Prophets',
+            otherReligionInfo: 'The final messenger. His life is the most documented in history.',
+            story: {
+                intro: 'Prophet Muhammad (ﷺ) is the Seal of the Prophets, sent to all mankind with the final revelation, the Quran.',
+                details: [
+                    'Born an orphan in Mecca, he was known as "Al-Amin" (The Trustworthy). At 40, he received revelation in Cave Hira.',
+                    'He endured 13 years of persecution in Mecca before migrating to Medina (Hijra), where he established the Islamic state. He returned to conquer Mecca peacefully. He completed the religion of Islam.'
+                ]
+            },
+            quranRef: { quote: 'Muhammad is not the father of [any] one of your men, but [he is] the Messenger of Allah and the Seal of the Prophets.', surah: 'Surah Al-Ahzab 33:40' },
+            quranText: 'مَّا كَانَ مُحَمَّدٌ أَبَا أَحَدٍ مِّن رِّجَالِكُمْ وَلَٰكِن رَّسُولَ اللَّهِ وَخَاتَمَ النَّبِيِّينَ',
+            timeline: [
+                { title: 'Revelation', description: '610 CE: First revelation in Hira.' },
+                { title: 'Hijra', description: '622 CE: Migration to Medina.' },
+                { title: 'Conquest', description: '630 CE: Peaceful liberation of Mecca.' },
+                { title: 'Death', description: '632 CE: Passed away in Medina.' }
+            ]
+        };
+
+        // --- CONTENT OBJECT MAPPING ---
+
+        const CONTENT = {
+            // --- AQIDAH CONTENT ---
+            allah: `
+                <h2 class="text-3xl font-bold text-slate-800 mb-6 border-b pb-4">Belief in Allah (Tawhid)</h2>
+                <div class="space-y-6">
+                    <div class="bg-indigo-50 p-6 rounded-xl border-l-4 border-indigo-500">
+                        <p class="text-lg"><strong>Tawhid</strong> (The Oneness of God) is the core of Islam. It is to believe that Allah is One, with no partner or associate in His Lordship, His Divinity, or His Names and Attributes.</p>
+                    </div>
+
+                    <h3 class="text-2xl text-slate-700 mt-8">The Three Categories of Tawhid</h3>
+                    <div class="grid md:grid-cols-3 gap-4">
+                        <div class="bg-white p-4 rounded-lg shadow-sm border border-slate-200">
+                            <h4 class="font-bold text-indigo-600 mb-2">1. Rububiyyah</h4>
+                            <p class="text-sm text-slate-600">Oneness of Lordship. Allah is the sole Creator, Sustainer, and Owner of the universe.</p>
+                        </div>
+                        <div class="bg-white p-4 rounded-lg shadow-sm border border-slate-200">
+                            <h4 class="font-bold text-indigo-600 mb-2">2. Uluhiyyah</h4>
+                            <p class="text-sm text-slate-600">Oneness of Worship. All acts of worship (prayer, dua, sacrifice) must be directed only to Allah.</p>
+                        </div>
+                        <div class="bg-white p-4 rounded-lg shadow-sm border border-slate-200">
+                            <h4 class="font-bold text-indigo-600 mb-2">3. Asma wa Sifat</h4>
+                            <p class="text-sm text-slate-600">Names & Attributes. Affirming the perfect names Allah has used to describe Himself.</p>
+                        </div>
+                    </div>
+
+                    <div class="mt-8 bg-slate-800 text-white p-8 rounded-xl text-center">
+                        <p class="arabic-text text-3xl mb-4">قُلْ هُوَ اللَّهُ أَحَدٌ</p>
+                        <p class="text-lg italic">"Say, 'He is Allah, [who is] One.'"</p>
+                        <p class="text-sm text-slate-400 mt-2">— Surah Al-Ikhlas 112:1</p>
+                    </div>
+                </div>
+            `,
+            angels: `
+                <h2 class="text-3xl font-bold text-slate-800 mb-6 border-b pb-4">Belief in Angels (Mala'ikah)</h2>
+                <div class="space-y-6">
+                    <div class="bg-blue-50 p-6 rounded-xl border-l-4 border-blue-500">
+                        <p class="text-lg">Angels are creation of Allah, created from light, who possess no free will and are devoted entirely to obeying Allah's commands. They are messengers between Allah and His creation, constantly carrying out their assigned tasks.</p>
+                    </div>
+
+                    <h3 class="text-2xl text-slate-700 mt-8">Roles of Prominent Angels</h3>
+                    <ul class="space-y-4 text-slate-700 list-none p-0">
+                        <li class="p-4 bg-white rounded-lg shadow-sm flex items-center space-x-4 border border-slate-100">
+                            <span class="text-blue-600 text-3xl">🕊️</span>
+                            <div><strong>Jibreel (Gabriel):</strong> The Chief of the Angels, responsible for conveying the Divine Revelation (Wahi) to the Prophets.</div>
+                        </li>
+                        <li class="p-4 bg-white rounded-lg shadow-sm flex items-center space-x-4 border border-slate-100">
+                            <span class="text-blue-600 text-3xl">🌧️</span>
+                            <div><strong>Mika'il (Michael):</strong> Responsible for the distribution of rain and sustenance.</div>
+                        </li>
+                        <li class="p-4 bg-white rounded-lg shadow-sm flex items-center space-x-4 border border-slate-100">
+                            <span class="text-blue-600 text-3xl">🎺</span>
+                            <div><strong>Israfil:</strong> The Angel appointed to blow the Trumpet (Sur) to signal the beginning of the Day of Judgment.</div>
+                        </li>
+                        <li class="p-4 bg-white rounded-lg shadow-sm flex items-center space-x-4 border border-slate-100">
+                            <span class="text-blue-600 text-3xl">✍️</span>
+                            <div><strong>Kiraman Katibin:</strong> The Noble Scribes who record all all the deeds (good and bad) of mankind.</div>
+                        </li>
+                    </ul>
+
+                    <div class="mt-8 bg-slate-800 text-white p-8 rounded-xl text-center">
+                        <p class="arabic-text text-3xl mb-4">وَقَالُوا اتَّخَذَ الرَّحْمَٰنُ وَلَدًا سُبْحَانَهُ ۚ بَلْ عِبَادٌ مُّكْرَمُونَ</p>
+                        <p class="text-lg italic">"And they say, 'The Most Merciful has taken a son.' Exalted is He! Rather, they are honored servants."</p>
+                        <p class="text-sm text-slate-400 mt-2">— Surah Al-Anbiya 21:26</p>
+                    </div>
+                </div>
+            `,
+            books: `
+                <h2 class="text-3xl font-bold text-slate-800 mb-6 border-b pb-4">Belief in Divine Books (Kutub)</h2>
+                <div class="space-y-6">
+                    <div class="bg-purple-50 p-6 rounded-xl border-l-4 border-purple-500">
+                        <p class="text-lg">Muslims believe that Allah revealed divine scriptures to various prophets as guidance for mankind. These books contain the original, uncorrupted message of monotheism.</p>
+                    </div>
+
+                    <h3 class="text-2xl text-slate-700 mt-8">Major Revealed Scriptures</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="p-4 bg-white shadow rounded-lg flex items-center space-x-3 border border-slate-200">
+                            <span class="text-purple-600 text-2xl">📖</span>
+                            <div><strong>The Quran:</strong> Revealed to Prophet Muhammad (ﷺ). The final, complete, and perfectly preserved revelation.</div>
+                        </div>
+                        <div class="p-4 bg-white shadow rounded-lg flex items-center space-x-3 border border-slate-200">
+                            <span class="text-purple-600 text-2xl">📜</span>
+                            <div><strong>The Injil (Gospel):</strong> Revealed to Prophet Isa (Jesus).</div>
+                        </div>
+                        <div class="p-4 bg-white shadow rounded-lg flex items-center space-x-3 border border-slate-200">
+                            <span class="text-purple-600 text-2xl">📜</span>
+                            <div><strong>The Tawrat (Torah):</strong> Revealed to Prophet Musa (Moses).</div>
+                        </div>
+                        <div class="p-4 bg-white shadow rounded-lg flex items-center space-x-3 border border-slate-200">
+                            <span class="text-purple-600 text-2xl">📜</span>
+                            <div><strong>The Zabur (Psalms):</strong> Revealed to Prophet Dawud (David).</div>
+                        </div>
+                    </div>
+                    <p class="text-sm text-slate-600 italic mt-4">We believe in the originals of these books as revealed by Allah, acknowledging that all previous scriptures were superseded and their original text corrupted over time, except for the Quran.</p>
+
+                    <div class="mt-8 bg-slate-800 text-white p-8 rounded-xl text-center">
+                        <p class="arabic-text text-3xl mb-4">نَزَّلَ عَلَيْكَ الْكِتَابَ بِالْحَقِّ مُصَدِّقًا لِّمَا بَيْنَ يَدَيْهِ</p>
+                        <p class="text-lg italic">"He has sent down to you the Book in truth, confirming that which preceded it."</p>
+                        <p class="text-sm text-slate-400 mt-2">— Surah Ali 'Imran 3:3</p>
+                    </div>
+                </div>
+            `,
+            messengers: `
+                <h2 class="text-3xl font-bold text-slate-800 mb-6 border-b pb-4">Belief in Messengers (Rusul)</h2>
+                <div class="space-y-6">
+                    <div class="bg-red-50 p-6 rounded-xl border-l-4 border-red-500">
+                        <p class="text-lg">A messenger (Rasul) is a prophet (Nabi) entrusted with a new divine law (Shariah). Belief in them means accepting that they were truthful, protected from major sins, and conveyed Allah's message perfectly.</p>
+                    </div>
+
+                    <h3 class="text-2xl text-slate-700 mt-8">Key Aspects of Messengerhood</h3>
+                    <div class="space-y-3">
+                        <div class="flex items-start space-x-3 p-4 bg-white rounded-lg shadow-sm border border-slate-100">
+                            <span class="text-red-600 font-bold text-xl">1.</span>
+                            <div><strong>Universal Message:</strong> Every messenger called their people to the worship of Allah alone (Tawhid).</div>
+                        </div>
+                        <div class="flex items-start space-x-3 p-4 bg-white rounded-lg shadow-sm border border-slate-100">
+                            <span class="text-red-600 font-bold text-xl">2.</span>
+                            <div><strong>Finality:</strong> Prophet Muhammad (ﷺ) is the last and final messenger, concluding the chain of prophethood.</div>
+                        </div>
+                        <div class="flex items-start space-x-3 p-4 bg-white rounded-lg shadow-sm border border-slate-100">
+                            <span class="text-red-600 font-bold text-xl">3.</span>
+                            <div><strong>Obedience:</strong> Obedience to the messenger is considered obedience to Allah.</div>
+                        </div>
+                    </div>
+
+                    <div class="mt-8 bg-slate-800 text-white p-8 rounded-xl text-center">
+                        <p class="arabic-text text-3xl mb-4">إِنَّا أَوْحَيْنَا إِلَيْكَ كَمَا أَوْحَيْنَا إِلَىٰ نُوحٍ وَالنَّبِيِّينَ مِن بَعْدِهِ</p>
+                        <p class="text-lg italic">"Indeed, We have revealed to you as We revealed to Noah and the prophets after him."</p>
+                        <p class="text-sm text-slate-400 mt-2">— Surah An-Nisa 4:163</p>
+                    </div>
+                </div>
+            `,
+            judgment: `
+                <h2 class="text-3xl font-bold text-slate-800 mb-6 border-b pb-4">Day of Judgment (Akhirah)</h2>
+                <div class="space-y-6">
+                    <div class="bg-fuchsia-50 p-6 rounded-xl border-l-4 border-fuchsia-500">
+                        <p class="text-lg">Akhirah is the belief in the life after death, encompassing resurrection, judgment, and the final destination: Paradise (Jannah) or Hellfire (Jahannam). It is the ultimate reckoning for every action performed in this world.</p>
+                    </div>
+
+                    <h3 class="text-2xl text-slate-700 mt-8">The Process of Reckoning</h3>
+                    <div class="grid md:grid-cols-2 gap-4">
+                        <div class="p-4 bg-white shadow rounded-lg border border-slate-200">
+                            <h4 class="font-bold text-fuchsia-600 mb-2 flex items-center"><span class="text-2xl mr-2">⚖️</span> The Scale (Mizan)</h4>
+                            <p class="text-sm text-slate-600">All deeds, good and bad, will be weighed accurately. Even an atom's weight of good or evil will be counted.</p>
+                        </div>
+                        <div class="p-4 bg-white shadow rounded-lg border border-slate-200">
+                            <h4 class="font-bold text-fuchsia-600 mb-2 flex items-center"><span class="text-2xl mr-2">📚</span> The Book of Deeds</h4>
+                            <p class="text-sm text-slate-600">Each person will be given their complete record of deeds, which the recording angels meticulously documented.</p>
+                        </div>
+                    </div>
+
+                    <p class="text-md italic text-slate-600 mt-4">This belief motivates believers to strive for good and avoid evil, knowing they will be held accountable.</p>
+
+                    <div class="mt-8 bg-slate-800 text-white p-8 rounded-xl text-center">
+                        <p class="arabic-text text-3xl mb-4">وَنَضَعُ الْمَوَازِينَ الْقِسْطَ لِيَوْمِ الْقِيَامَةِ فَلَا تُظْلَمُ نَفْسٌ شَيْئًا</p>
+                        <p class="text-lg italic">"And We will set up the scales of justice for the Day of Resurrection, so no soul will be treated unjustly at all."</p>
+                        <p class="text-sm text-slate-400 mt-2">— Surah Al-Anbiya 21:47</p>
+                    </div>
+                </div>
+            `,
+            qadr: `
+                <h2 class="text-3xl font-bold text-slate-800 mb-6 border-b pb-4">Divine Decree (Al-Qadr)</h2>
+                <div class="space-y-6">
+                    <div class="bg-cyan-50 p-6 rounded-xl border-l-4 border-cyan-500">
+                        <p class="text-lg">Al-Qadr is the belief that Allah has predetermined everything that happens in the universe. This does not negate human free will or responsibility, but rather confirms Allah's absolute knowledge and sovereignty.</p>
+                    </div>
+
+                    <h3 class="text-2xl text-slate-700 mt-8">Four Pillars of Al-Qadr</h3>
+                    <ul class="space-y-4 text-slate-700 list-none p-0">
+                        <li class="p-4 bg-white rounded-lg shadow-sm border border-slate-100">
+                            <h4 class="font-bold text-cyan-600 mb-1">1. Al-Ilm (Knowledge)</h4>
+                            <p class="text-sm text-slate-600">Allah's perfect and eternal knowledge of everything that has happened and everything that will happen.</p>
+                        </li>
+                        <li class="p-4 bg-white rounded-lg shadow-sm border border-slate-100">
+                            <h4 class="font-bold text-cyan-600 mb-1">2. Al-Kitabah (Recording)</h4>
+                            <p class="text-sm text-slate-600">Allah recorded everything that will occur until the Day of Judgment in a Preserved Tablet (Al-Lawh Al-Mahfuz).</p>
+                        </li>
+                        <li class="p-4 bg-white rounded-lg shadow-sm border border-slate-100">
+                            <h4 class="font-bold text-cyan-600 mb-1">3. Al-Mashi’ah (Will)</h4>
+                            <p class="text-sm text-slate-600">Nothing happens in the heavens or on Earth except by the Will of Allah.</p>
+                        </li>
+                        <li class="p-4 bg-white rounded-lg shadow-sm border border-slate-100">
+                            <h4 class="font-bold text-cyan-600 mb-1">4. Al-Khalq (Creation)</h4>
+                            <p class="text-sm text-slate-600">Allah is the Creator of everything, including our actions and their consequences.</p>
+                        </li>
+                    </ul>
+
+                    <div class="mt-8 bg-slate-800 text-white p-8 rounded-xl text-center">
+                        <p class="arabic-text text-3xl mb-4">إِنَّا كُلَّ شَيْءٍ خَلَقْنَاهُ بِقَدَرٍ</p>
+                        <p class="text-lg italic">"Indeed, all things We created with [precise] destiny."</p>
+                        <p class="text-sm text-slate-400 mt-2">— Surah Al-Qamar 54:49</p>
+                    </div>
+                </div>
+            `,
+
+            // --- IBADAH CONTENT ---
+            shahada: `
+                <h2 class="text-3xl font-bold text-slate-800 mb-6 border-b pb-4">The Shahada (Declaration of Faith)</h2>
+                <div class="space-y-6">
+                    <div class="bg-amber-50 p-6 rounded-xl border-l-4 border-amber-500">
+                        <p class="text-lg">The Shahada is the first pillar of Islam. It is the sincere declaration and conviction that there is no god worthy of worship except Allah, and that Muhammad is His Messenger. This simple statement enters a person into the fold of Islam.</p>
+                    </div>
+
+                    <div class="flex justify-center my-8">
+                        <div class="bg-slate-800 text-amber-400 p-8 rounded-full shadow-xl flex items-center justify-center w-48 h-48 border-4 border-amber-500">
+                             <span class="text-6xl">☝️</span>
+                        </div>
+                    </div>
+
+                    <div class="mt-8 bg-slate-800 text-white p-8 rounded-xl text-center">
+                        <p class="arabic-text text-3xl mb-4 leading-loose">أَشْهَدُ أَنْ لَا إِلَٰهَ إِلَّا ٱللَّٰهُ وَأَشْهَدُ أَنَّ مُحَمَّدًا رَسُولُ ٱللَّٰهِ</p>
+                        <p class="text-lg italic mb-2">"Ash-hadu an la ilaha illa Allah, Wa ash-hadu anna Muhammadan Rasulu-Allah"</p>
+                        <p class="text-md text-slate-300">"I bear witness that there is no deity but Allah, and I bear witness that Muhammad is the Messenger of Allah."</p>
+                    </div>
+                     <div class="mt-4 p-4 bg-white border border-slate-200 rounded-lg">
+                        <p class="text-sm text-slate-600"><strong>Quranic Reference:</strong> <span class="italic">"Allah witnesses that there is no deity except Him, and [so do] the angels and those of knowledge..." (Surah Ali 'Imran 3:18)</span></p>
+                    </div>
+                </div>
+            `,
+            salah: `
+                <h2 class="text-3xl font-bold text-slate-800 mb-6 border-b pb-4">The Salah (Prayer)</h2>
+                <div class="space-y-6">
+                    <div class="bg-amber-50 p-6 rounded-xl border-l-4 border-amber-500">
+                        <p class="text-lg">Salah is the second pillar of Islam and the most important act of worship after the Shahada. It is a direct connection between the servant and their Creator, performed five times a day at prescribed times.</p>
+                    </div>
+
+                    <h3 class="text-2xl text-slate-700 mt-6">The Five Daily Prayers</h3>
+                    <div class="space-y-3">
+                        <div class="flex items-center p-4 bg-white rounded-lg shadow-sm border border-slate-100 justify-between">
+                            <span class="font-bold text-slate-700">1. Fajr</span>
+                            <span class="text-sm text-slate-500">Dawn, before sunrise</span>
+                        </div>
+                        <div class="flex items-center p-4 bg-white rounded-lg shadow-sm border border-slate-100 justify-between">
+                            <span class="font-bold text-slate-700">2. Dhuhr</span>
+                            <span class="text-sm text-slate-500">Midday, just after noon</span>
+                        </div>
+                        <div class="flex items-center p-4 bg-white rounded-lg shadow-sm border border-slate-100 justify-between">
+                            <span class="font-bold text-slate-700">3. Asr</span>
+                            <span class="text-sm text-slate-500">Late afternoon</span>
+                        </div>
+                        <div class="flex items-center p-4 bg-white rounded-lg shadow-sm border border-slate-100 justify-between">
+                            <span class="font-bold text-slate-700">4. Maghrib</span>
+                            <span class="text-sm text-slate-500">Immediately after sunset</span>
+                        </div>
+                        <div class="flex items-center p-4 bg-white rounded-lg shadow-sm border border-slate-100 justify-between">
+                            <span class="font-bold text-slate-700">5. Isha</span>
+                            <span class="text-sm text-slate-500">Nighttime, after twilight disappears</span>
+                        </div>
+                    </div>
+
+                    <h3 class="text-2xl text-slate-700 pt-6 mt-8 border-t">Steps of Prayer (Salah)</h3>
+
+                    <p class="text-md text-slate-600 mb-4">The prayer consists of a series of cycles called Rak'at. Here is the general sequence for one Rak'ah:</p>
+
+                    <ol class="list-decimal list-inside space-y-4 ml-4">
+                        <li class="p-3 bg-white rounded-lg shadow-sm border border-slate-100">
+                            <strong>Intention (Niyyah) & Start:</strong> Make the intention for the specific prayer, then raise hands to the ears and say:
+                            <p class="arabic-text text-xl font-bold mt-1 text-slate-800">اَللّٰهُ أَكْبَرُ</p>
+                            <p class="text-sm italic text-amber-700">Allahu Akbar (Allah is the Greatest)</p>
+                        </li>
+                        <li class="p-3 bg-white rounded-lg shadow-sm border border-slate-100">
+                            <strong>Standing (Qiyam) & Recitation:</strong> Stand still, recite Surah Al-Fatihah, and another short portion of the Quran.
+                        </li>
+                        <li class="p-3 bg-white rounded-lg shadow-sm border border-slate-100">
+                            <strong>Bowing (Ruku'):</strong> Bow down, resting hands on the knees, and say three times:
+                            <p class="arabic-text text-xl font-bold mt-1 text-slate-800">سُبْحَانَ رَبِّيَ الْعَظِيمِ</p>
+                            <p class="text-sm italic text-amber-700">Subhana Rabbiyal-Azeem (Subhan be to my Lord, the Almighty)</p>
+                        </li>
+                        <li class="p-3 bg-white rounded-lg shadow-sm border border-slate-100">
+                            <strong>Standing Up:</strong> Stand straight again, saying:
+                            <p class="arabic-text text-xl font-bold mt-1 text-slate-800">سَمِعَ اللَّهُ لِمَنْ حَمِدَهُ</p>
+                            <p class="text-sm italic text-amber-700">Sami'Allahu liman Hamidah (Allah hears those who praise Him)</p>
+                        </li>
+                        <li class="p-3 bg-white rounded-lg shadow-sm border border-slate-100">
+                            <strong>Prostration (Sujud):</strong> Go into prostration with the forehead, nose, palms, knees, and toes touching the ground, and say three times:
+                            <p class="arabic-text text-xl font-bold mt-1 text-slate-800">سُبْحَانَ رَبِّيَ الْأَعْلَى</p>
+                            <p class="text-sm italic text-amber-700">Subhana Rabbiyal-A'la (Glory be to my Lord, the Most High)</p>
+                        </li>
+                        <li class="p-3 bg-white rounded-lg shadow-sm border border-slate-100">
+                            <strong>Sitting (Jalsah):</strong> Sit up briefly between the two prostrations.
+                        </li>
+                        <li class="p-3 bg-white rounded-lg shadow-sm border border-slate-100">
+                            <strong>Second Prostration:</strong> Repeat the prostration (Sujud). This completes one Rak'ah.
+                        </li>
+                        <li class="p-3 bg-white rounded-lg shadow-sm border border-slate-100">
+                            <strong>End of Prayer (Salam):</strong> After the required number of Rak'at (e.g., 2 for Fajr, 4 for Dhuhr), sit and recite the final supplication (Tashahhud), then turn the head right and left, saying:
+                            <p class="arabic-text text-xl font-bold mt-1 text-slate-800">السَّلاَمُ عَلَيْكُمْ وَرَحْمَةُ اللهِ</p>
+                            <p class="text-sm italic text-amber-700">As-salamu Alaykum wa Rahmatu Allahi (Peace and mercy of Allah be upon you)</p>
+                        </li>
+                    </ol>
+
+                    <div class="mt-8 bg-slate-800 text-white p-8 rounded-xl text-center">
+                        <p class="arabic-text text-3xl mb-4">إِنَّ الصَّلَاةَ كَانَتْ عَلَى الْمُؤْمِنِينَ كِتَابًا مَّوْقُوتًا</p>
+                        <p class="text-lg italic">"Indeed, prayer has been decreed upon the believers a decree [to be observed] at fixed times."</p>
+                        <p class="text-sm text-slate-400 mt-2">— Surah An-Nisa 4:103</p>
+                    </div>
+                </div>
+            `,
+            zakat: `
+                <h2 class="text-3xl font-bold text-slate-800 mb-6 border-b pb-4">Charity (Zakat)</h2>
+                <div class="space-y-6">
+                    <div class="bg-amber-50 p-6 rounded-xl border-l-4 border-amber-500">
+                        <p class="text-lg">Zakat is the third pillar of Islam, an obligatory form of charity for every financially able Muslim. It purifies wealth and redistributes it to the needy, ensuring economic justice in society.</p>
+                    </div>
+
+                    <h3 class="text-2xl text-slate-700 mt-8">Key Zakat Concepts</h3>
+                    <ul class="space-y-4 text-slate-700 list-none p-0">
+                        <li class="p-4 bg-white rounded-lg shadow-sm border border-slate-100">
+                            <h4 class="font-bold text-amber-600 mb-1">Nisab (Minimum Threshold)</h4>
+                            <p class="text-sm text-slate-600">The minimum amount of wealth required for Zakat to be obligatory (e.g., equivalent value of 87.48 grams of gold or 612.36 grams of silver).</p>
+                        </li>
+                        <li class="p-4 bg-white rounded-lg shadow-sm border border-slate-100">
+                            <h4 class="font-bold text-amber-600 mb-1">Rate</h4>
+                            <p class="text-sm text-slate-600">Generally 2.5% of one's accumulated wealth that has been held for one lunar year.</p>
+                        </li>
+                        <li class="p-4 bg-white rounded-lg shadow-sm border border-slate-100">
+                            <h4 class="font-bold text-amber-600 mb-1">Recipients</h4>
+                            <p class="text-sm text-slate-600">Zakat can only be distributed among eight categories of recipients mentioned in the Quran, including the poor, the needy, and debtors.</p>
+                        </li>
+                    </ul>
+
+                    <div class="mt-8 bg-slate-800 text-white p-8 rounded-xl text-center">
+                        <p class="arabic-text text-3xl mb-4">وَأَقِيمُوا الصَّلَاةَ وَآتُوا الزَّكَاةَ</p>
+                        <p class="text-lg italic">"And establish prayer and give Zakat"</p>
+                        <p class="text-sm text-slate-400 mt-2">— Surah Al-Baqarah 2:43</p>
+                    </div>
+                </div>
+            `,
+            sawm: `
+                <h2 class="text-3xl font-bold text-slate-800 mb-6 border-b pb-4">Fasting (Sawm)</h2>
+                <div class="space-y-6">
+                    <div class="bg-amber-50 p-6 rounded-xl border-l-4 border-amber-500">
+                        <p class="text-lg">Sawm is the fourth pillar of Islam, referring to fasting during the month of Ramadan. It involves abstaining from food, drink, and sexual relations from dawn until sunset, focusing on spiritual reflection and self-discipline.</p>
+                    </div>
+
+                    <h3 class="text-2xl text-slate-700 mt-8">The Month of Ramadan</h3>
+                    <div class="space-y-3">
+                        <div class="flex items-start space-x-3 p-4 bg-white rounded-lg shadow-sm border border-slate-100">
+                            <span class="text-amber-600 font-bold text-xl">🌙</span>
+                            <div><strong>Duration:</strong> Fasting lasts for the entire month of Ramadan, the ninth month of the Islamic lunar calendar.</div>
+                        </div>
+                        <div class="flex items-start space-x-3 p-4 bg-white rounded-lg shadow-sm border border-slate-100">
+                            <span class="text-amber-600 font-bold text-xl">🌅</span>
+                            <div><strong>Daily Practice:</strong> The fast begins with the morning meal (Suhoor) and is broken after sunset with the evening meal (Iftar).</div>
+                        </div>
+                        <div class="flex items-start space-x-3 p-4 bg-white rounded-lg shadow-sm border border-slate-100">
+                            <span class="text-amber-600 font-bold text-xl">🙏</span>
+                            <div><strong>Spiritual Goal:</strong> To attain God-consciousness (Taqwa), understand the suffering of the poor, and increase devotion.</div>
+                        </div>
+                    </div>
+
+                    <div class="mt-8 bg-slate-800 text-white p-8 rounded-xl text-center">
+                        <p class="arabic-text text-3xl mb-4">يَا أَيُّهَا الَّذِينَ آمَنُوا كُتِبَ عَلَيْكُمُ الصِّيَامُ كَمَا كُتِبَ عَلَى الَّذِينَ مِن قَبْلِكُمْ لَعَلَّكُمْ تَتَّقُونَ</p>
+                        <p class="text-lg italic">"O you who have believed, decreed upon you is fasting as it was decreed upon those before you that you may become righteous"</p>
+                        <p class="text-sm text-slate-400 mt-2">— Surah Al-Baqarah 2:183</p>
+                    </div>
+                </div>
+            `,
+            hajj: `
+                <h2 class="text-3xl font-bold text-slate-800 mb-6 border-b pb-4">Pilgrimage (Hajj)</h2>
+                <div class="space-y-6">
+                    <div class="bg-amber-50 p-6 rounded-xl border-l-4 border-amber-500">
+                        <p class="text-lg">Hajj is the fifth pillar of Islam, the annual pilgrimage to the holy city of Mecca, obligatory once in a lifetime for every Muslim who is physically and financially able to undertake the journey.</p>
+                    </div>
+
+                    <h3 class="text-2xl text-slate-700 mt-8">Major Rituals of Hajj</h3>
+                    <div class="grid md:grid-cols-2 gap-4">
+                        <div class="p-4 bg-white shadow rounded-lg border border-slate-200">
+                            <h4 class="font-bold text-amber-600 mb-2 flex items-center"><span class="text-2xl mr-2">🕋</span> Tawaf</h4>
+                            <p class="text-sm text-slate-600">Circumambulating the Kaaba seven times in an anticlockwise direction.</p>
+                        </div>
+                        <div class="p-4 bg-white shadow rounded-lg border border-slate-200">
+                            <h4 class="font-bold text-amber-600 mb-2 flex items-center"><span class="text-2xl mr-2">🏃</span> Sa'ee</h4>
+                            <p class="text-sm text-slate-600">Walking and running seven times between the hills of Safa and Marwah.</p>
+                        </div>
+                        <div class="p-4 bg-white shadow rounded-lg border border-slate-200">
+                            <h4 class="font-bold text-amber-600 mb-2 flex items-center"><span class="text-2xl mr-2">🙏</span> Day of Arafah</h4>
+                            <p class="text-sm text-slate-600">Standing in prayer and reflection from noon till sunset on the Plains of Arafah. This is the peak of Hajj.</p>
+                        </div>
+                        <div class="p-4 bg-white shadow rounded-lg border border-slate-200">
+                            <h4 class="font-bold text-amber-600 mb-2 flex items-center"><span class="text-2xl mr-2">🪨</span> Rami (Stoning)</h4>
+                            <p class="text-sm text-slate-600">Symbolic stoning of the pillars (Jamarat) representing the rejection of Shaytan (Satan).</p>
+                        </div>
+                    </div>
+
+                    <div class="mt-8 bg-slate-800 text-white p-8 rounded-xl text-center">
+                        <p class="arabic-text text-3xl mb-4">وَلِلَّهِ عَلَى النَّاسِ حِجُّ الْبَيْتِ مَنِ اسْتَطَاعَ إِلَيْهِ سَبِيلًا</p>
+                        <p class="text-lg italic">"And [due] to Allah from the people is a pilgrimage to the House - for whoever is able to find thereto a way."</p>
+                        <p class="text-sm text-slate-400 mt-2">— Surah Ali 'Imran 3:97</p>
+                    </div>
+                </div>
+            `,
+
+            // --- SEERAH CONTENT ---
+            mecca: `
+                <h2 class="text-3xl font-bold text-slate-800 mb-6 border-b pb-4">The Meccan Period</h2>
+                <div class="space-y-6">
+                    <div class="bg-sky-50 p-6 rounded-xl border-l-4 border-sky-500">
+                        <p class="text-lg">The Meccan period spans the first 13 years of Prophet Muhammad's (ﷺ) mission, from the start of revelation until the Hijra (migration) to Medina. It was characterized by the establishment of core beliefs (Tawhid) and severe persecution by the Quraysh tribe.</p>
+                    </div>
+
+                    <h3 class="text-2xl text-slate-700 mt-8">Timeline and Key Events</h3>
+                    <ul class="space-y-4 text-slate-700 list-none p-0">
+                        <li class="p-4 bg-white rounded-lg shadow-sm border border-slate-100">
+                            <h4 class="font-bold text-sky-600 mb-1">610 CE: First Revelation</h4>
+                            <p class="text-sm text-slate-600">The Prophet (ﷺ) received the first verses of the Quran in the Cave of Hira. His mission began secretly among close friends and family.</p>
+                        </li>
+                        <li class="p-4 bg-white rounded-lg shadow-sm border border-slate-100">
+                            <h4 class="font-bold text-sky-600 mb-1">613 CE: Public Call</h4>
+                            <p class="text-sm text-slate-600">The Prophet (ﷺ) began preaching publicly, leading to open hostility and torture of the early Muslims.</p>
+                        </li>
+                        <li class="p-4 bg-white rounded-lg shadow-sm border border-slate-100">
+                            <h4 class="font-bold text-sky-600 mb-1">619 CE: Year of Sorrow</h4>
+                            <p class="text-sm text-slate-600">Prophet Muhammad's (ﷺ) uncle and protector, Abu Talib, and his first wife, Khadijah, passed away, intensifying his vulnerability.</p>
+                        </li>
+                        <li class="p-4 bg-white rounded-lg shadow-sm border border-slate-100">
+                            <h4 class="font-bold text-sky-600 mb-1">622 CE: The Hijra</h4>
+                            <p class="text-sm text-slate-600">The migration from Mecca to Yathrib (later Medina), marking the beginning of the Islamic calendar.</p>
+                        </li>
+                    </ul>
+
+                    <div class="mt-8 bg-slate-800 text-white p-8 rounded-xl text-center">
+                        <p class="arabic-text text-3xl mb-4">اقْرَأْ بِاسْمِ رَبِّكَ الَّذِي خَلَقَ</p>
+                        <p class="text-lg italic">"Recite in the name of your Lord who created"</p>
+                        <p class="text-sm text-slate-400 mt-2">— Surah Al-'Alaq 96:1 (The first revelation)</p>
+                    </div>
+                </div>
+            `,
+            madina: `
+                <h2 class="text-3xl font-bold text-slate-800 mb-6 border-b pb-4">The Madinan Period</h2>
+                <div class="space-y-6">
+                    <div class="bg-sky-50 p-6 rounded-xl border-l-4 border-sky-500">
+                        <p class="text-lg">The Madinan period, spanning the last 10 years of the Prophet's (ﷺ) life, saw the establishment of the first organized Islamic state, the revelation of laws governing social, political, and economic life, and the defense of the Muslim community.</p>
+                    </div>
+
+                    <h3 class="text-2xl text-slate-700 mt-8">Establishing the Community (Ummah)</h3>
+                    <ul class="space-y-4 text-slate-700 list-none p-0">
+                        <li class="p-4 bg-white rounded-lg shadow-sm border border-slate-100">
+                            <h4 class="font-bold text-sky-600 mb-1">The Charter of Medina</h4>
+                            <p class="text-sm text-slate-600">A document establishing the rights and duties of all communities (Muslims, Jews, Pagans) in Medina, creating a unified state.</p>
+                        </li>
+                        <li class="p-4 bg-white rounded-lg shadow-sm border border-slate-100">
+                            <h4 class="font-bold text-sky-600 mb-1">Brotherhood (Mu'akhat)</h4>
+                            <p class="text-sm text-slate-600">The Prophet (ﷺ) instituted a brotherhood between the Meccan emigrants (Muhajirun) and the Medinan helpers (Ansar), sharing wealth and homes.</p>
+                        </li>
+                        <li class="p-4 bg-white rounded-lg shadow-sm border border-slate-100">
+                            <h4 class="font-bold text-sky-600 mb-1">Legislation</h4>
+                            <p class="text-sm text-slate-600">Many of the laws regarding fasting, Zakat, Hajj, marriage, inheritance, and governance were revealed during this period.</p>
+                        </li>
+                    </ul>
+
+                    <div class="mt-8 bg-slate-800 text-white p-8 rounded-xl text-center">
+                        <p class="arabic-text text-3xl mb-4">كُنتُمْ خَيْرَ أُمَّةٍ أُخْرِجَتْ لِلنَّاسِ</p>
+                        <p class="text-lg italic">"You are the best community (Ummah) raised up for mankind."</p>
+                        <p class="text-sm text-slate-400 mt-2">— Surah Ali 'Imran 3:110</p>
+                    </div>
+                </div>
+            `,
+            battles: `
+                <h2 class="text-3xl font-bold text-slate-800 mb-6 border-b pb-4">Major Events & Battles</h2>
+                <div class="space-y-6">
+                    <div class="bg-sky-50 p-6 rounded-xl border-l-4 border-sky-500">
+                        <p class="text-lg">The Madinan period involved several defensive conflicts as the nascent Muslim community sought to survive and protect itself against the aggression of the Quraysh and other hostile tribes.</p>
+                    </div>
+
+                    <h3 class="text-2xl text-slate-700 mt-8">Important Battles</h3>
+                    <div class="grid md:grid-cols-3 gap-4">
+                        <div class="p-4 bg-white shadow rounded-lg border border-slate-200">
+                            <h4 class="font-bold text-sky-600 mb-2">Battle of Badr (624 CE)</h4>
+                            <p class="text-sm text-slate-600">The first major battle. A small Muslim force miraculously defeated a much larger Meccan army. A turning point for the community.</p>
+                        </div>
+                        <div class="p-4 bg-white shadow rounded-lg border border-slate-200">
+                            <h4 class="font-bold text-sky-600 mb-2">Battle of Uhud (625 CE)</h4>
+                            <p class="text-sm text-slate-600">A reversal of fortune where the Muslims faced defeat after some archers disobeyed the Prophet's (ﷺ) orders. A lesson in discipline.</p>
+                        </div>
+                        <div class="p-4 bg-white shadow rounded-lg border border-slate-200">
+                            <h4 class="font-bold text-sky-600 mb-2">Battle of the Trench (627 CE)</h4>
+                            <p class="text-sm text-slate-600">The Muslims defended Medina by digging a massive trench. The Meccans and their allies were forced to withdraw due to a long siege and adverse weather.</p>
+                        </div>
+                    </div>
+
+                    <h3 class="text-2xl text-slate-700 mt-8 border-t pt-6">The Conquest of Mecca (630 CE)</h3>
+                    <p class="text-md text-slate-700">Prophet Muhammad (ﷺ) marched on Mecca with a large army. The city surrendered peacefully, and the Kaaba was cleansed of idols. This event effectively cemented the victory of Islam in the Arabian Peninsula.</p>
+
+                    <div class="mt-8 bg-slate-800 text-white p-8 rounded-xl text-center">
+                        <p class="arabic-text text-3xl mb-4">إِذَا جَاءَ نَصْرُ اللَّهِ وَالْفَتْحُ</p>
+                        <p class="text-lg italic">"When the victory of Allah has come and the conquest,"</p>
+                        <p class="text-sm text-slate-400 mt-2">— Surah An-Nasr 110:1 (Revealed shortly before the Prophet's death)</p>
+                    </div>
+                </div>
+            `,
+
+            // --- PROPHETS CONTENT (ALL 25) ---
+            adam: generateProphetContent(prophetAdam.englishName, prophetAdam.arabicName, prophetAdam.otherReligionName, prophetAdam.otherReligionInfo, prophetAdam.story, prophetAdam.quranRef, prophetAdam.quranText, prophetAdam.timeline),
+            idris: generateProphetContent(prophetIdris.englishName, prophetIdris.arabicName, prophetIdris.otherReligionName, prophetIdris.otherReligionInfo, prophetIdris.story, prophetIdris.quranRef, prophetIdris.quranText, prophetIdris.timeline),
+            nuh: generateProphetContent(prophetNuh.englishName, prophetNuh.arabicName, prophetNuh.otherReligionName, prophetNuh.otherReligionInfo, prophetNuh.story, prophetNuh.quranRef, prophetNuh.quranText, prophetNuh.timeline),
+            hud: generateProphetContent(prophetHud.englishName, prophetHud.arabicName, prophetHud.otherReligionName, prophetHud.otherReligionInfo, prophetHud.story, prophetHud.quranRef, prophetHud.quranText, prophetHud.timeline),
+            salih: generateProphetContent(prophetSalih.englishName, prophetSalih.arabicName, prophetSalih.otherReligionName, prophetSalih.otherReligionInfo, prophetSalih.story, prophetSalih.quranRef, prophetSalih.quranText, prophetSalih.timeline),
+            ibrahim: generateProphetContent(prophetIbrahim.englishName, prophetIbrahim.arabicName, prophetIbrahim.otherReligionName, prophetIbrahim.otherReligionInfo, prophetIbrahim.story, prophetIbrahim.quranRef, prophetIbrahim.quranText, prophetIbrahim.timeline),
+            lut: generateProphetContent(prophetLut.englishName, prophetLut.arabicName, prophetLut.otherReligionName, prophetLut.otherReligionInfo, prophetLut.story, prophetLut.quranRef, prophetLut.quranText, prophetLut.timeline),
+            ismail: generateProphetContent(prophetIsmail.englishName, prophetIsmail.arabicName, prophetIsmail.otherReligionName, prophetIsmail.otherReligionInfo, prophetIsmail.story, prophetIsmail.quranRef, prophetIsmail.quranText, prophetIsmail.timeline),
+            ishaq: generateProphetContent(prophetIshaq.englishName, prophetIshaq.arabicName, prophetIshaq.otherReligionName, prophetIshaq.otherReligionInfo, prophetIshaq.story, prophetIshaq.quranRef, prophetIshaq.quranText, prophetIshaq.timeline),
+            yaqub: generateProphetContent(prophetYaqub.englishName, prophetYaqub.arabicName, prophetYaqub.otherReligionName, prophetYaqub.otherReligionInfo, prophetYaqub.story, prophetYaqub.quranRef, prophetYaqub.quranText, prophetYaqub.timeline),
+            yusuf: generateProphetContent(prophetYusuf.englishName, prophetYusuf.arabicName, prophetYusuf.otherReligionName, prophetYusuf.otherReligionInfo, prophetYusuf.story, prophetYusuf.quranRef, prophetYusuf.quranText, prophetYusuf.timeline),
+            ayyub: generateProphetContent(prophetAyyub.englishName, prophetAyyub.arabicName, prophetAyyub.otherReligionName, prophetAyyub.otherReligionInfo, prophetAyyub.story, prophetAyyub.quranRef, prophetAyyub.quranText, prophetAyyub.timeline),
+            shuaib: generateProphetContent(prophetShuaib.englishName, prophetShuaib.arabicName, prophetShuaib.otherReligionName, prophetShuaib.otherReligionInfo, prophetShuaib.story, prophetShuaib.quranRef, prophetShuaib.quranText, prophetShuaib.timeline),
+            musa: generateProphetContent(prophetMusa.englishName, prophetMusa.arabicName, prophetMusa.otherReligionName, prophetMusa.otherReligionInfo, prophetMusa.story, prophetMusa.quranRef, prophetMusa.quranText, prophetMusa.timeline),
+            harun: generateProphetContent(prophetHarun.englishName, prophetHarun.arabicName, prophetHarun.otherReligionName, prophetHarun.otherReligionInfo, prophetHarun.story, prophetHarun.quranRef, prophetHarun.quranText, prophetHarun.timeline),
+            dhulkifl: generateProphetContent(prophetDhulkifl.englishName, prophetDhulkifl.arabicName, prophetDhulkifl.otherReligionName, prophetDhulkifl.otherReligionInfo, prophetDhulkifl.story, prophetDhulkifl.quranRef, prophetDhulkifl.quranText, prophetDhulkifl.timeline),
+            dawud: generateProphetContent(prophetDawud.englishName, prophetDawud.arabicName, prophetDawud.otherReligionName, prophetDawud.otherReligionInfo, prophetDawud.story, prophetDawud.quranRef, prophetDawud.quranText, prophetDawud.timeline),
+            sulaiman: generateProphetContent(prophetSulaiman.englishName, prophetSulaiman.arabicName, prophetSulaiman.otherReligionName, prophetSulaiman.otherReligionInfo, prophetSulaiman.story, prophetSulaiman.quranRef, prophetSulaiman.quranText, prophetSulaiman.timeline),
+            ilyas: generateProphetContent(prophetIlyas.englishName, prophetIlyas.arabicName, prophetIlyas.otherReligionName, prophetIlyas.otherReligionInfo, prophetIlyas.story, prophetIlyas.quranRef, prophetIlyas.quranText, prophetIlyas.timeline),
+            alysah: generateProphetContent(prophetAlyasa.englishName, prophetAlyasa.arabicName, prophetAlyasa.otherReligionName, prophetAlyasa.otherReligionInfo, prophetAlyasa.story, prophetAlyasa.quranRef, prophetAlyasa.quranText, prophetAlyasa.timeline),
+            yunus: generateProphetContent(prophetYunus.englishName, prophetYunus.arabicName, prophetYunus.otherReligionName, prophetYunus.otherReligionInfo, prophetYunus.story, prophetYunus.quranRef, prophetYunus.quranText, prophetYunus.timeline),
+            zakariyya: generateProphetContent(prophetZakariyya.englishName, prophetZakariyya.arabicName, prophetZakariyya.otherReligionName, prophetZakariyya.otherReligionInfo, prophetZakariyya.story, prophetZakariyya.quranRef, prophetZakariyya.quranText, prophetZakariyya.timeline),
+            yahya: generateProphetContent(prophetYahya.englishName, prophetYahya.arabicName, prophetYahya.otherReligionName, prophetYahya.otherReligionInfo, prophetYahya.story, prophetYahya.quranRef, prophetYahya.quranText, prophetYahya.timeline),
+            isa: generateProphetContent(prophetIsa.englishName, prophetIsa.arabicName, prophetIsa.otherReligionName, prophetIsa.otherReligionInfo, prophetIsa.story, prophetIsa.quranRef, prophetIsa.quranText, prophetIsa.timeline),
+            muhammad: generateProphetContent(prophetMuhammad.englishName, prophetMuhammad.arabicName, prophetMuhammad.otherReligionName, prophetMuhammad.otherReligionInfo, prophetMuhammad.story, prophetMuhammad.quranRef, prophetMuhammad.quranText, prophetMuhammad.timeline),
+
+            // --- PERSONALITIES CONTENT ---
+            religious_figures: `
+                <h2 class="text-3xl font-bold text-slate-800 mb-6 border-b pb-4">Religious & Early Historical Figures</h2>
+                <div class="bg-violet-50 p-6 rounded-xl border-l-4 border-violet-500 mb-8">
+                    <p class="text-lg">The foundation of Islamic history is built upon the sacrifices and leadership of the Prophet's family (Ahl al-Bayt) and his close companions (Sahaba).</p>
+                </div>
+                <div class="grid gap-6 md:grid-cols-2">
+                    ${generatePersonalityCard(
+                        'Prophet Muhammad (ﷺ)',
+                        'The Final Messenger',
+                        'The central figure of Islam and the seal of the prophets. He received the Quran over 23 years and established the final monotheistic religion, setting the perfect example (Sunnah) for humanity.',
+                        'Conveying the Message of Islam, establishing the Ummah, and completing the religion of God.'
+                    )}
+                    ${generatePersonalityCard(
+                        'Khadijah bint Khuwaylad',
+                        'Mother of Believers',
+                        'A successful merchant and the Prophet’s first wife. She was the first person to accept Islam, providing critical emotional and financial support when the Prophet was first persecuted.',
+                        'The first convert to Islam and the pillar of support during the hardest years of revelation.'
+                    )}
+                    ${generatePersonalityCard(
+                        'Fatima bint Muhammad',
+                        'Leader of the Women of Paradise',
+                        'The youngest daughter of the Prophet and wife of Ali. She is revered for her piety, patience, and close resemblance to her father in character.',
+                        'Mother of the Prophet’s lineage (Hasan and Husayn) and a symbol of purity and devotion.'
+                    )}
+                    ${generatePersonalityCard(
+                        'Abu Bakr as-Siddiq',
+                        '1st Caliph',
+                        'The closest friend of the Prophet and the first adult male convert. Known for his truthfulness and gentle nature. He held the community together after the Prophet’s death.',
+                        'Preserved the unity of the Ummah during the Ridda Wars and initiated the compilation of the Quran.'
+                    )}
+                    ${generatePersonalityCard(
+                        'Umar ibn al-Khattab',
+                        '2nd Caliph',
+                        'Known as Al-Faruq (The Distinguisher between Truth and Falsehood). His caliphate saw the vast expansion of the Islamic state and the establishment of justice and administration systems.',
+                        'Established the Hijri calendar, organized the state treasury (Bayt al-Mal), and liberated Jerusalem.'
+                    )}
+                    ${generatePersonalityCard(
+                        'Uthman ibn Affan',
+                        '3rd Caliph',
+                        'Known as Dhun-Nurayn (Possessor of Two Lights) for marrying two of the Prophet’s daughters. He was known for his immense shyness and generosity.',
+                        'Standardized the Quran into a single dialect (Mushaf) and distributed it to the provinces.'
+                    )}
+                    ${generatePersonalityCard(
+                        'Ali ibn Abi Talib',
+                        '4th Caliph',
+                        'The cousin and son-in-law of the Prophet. The first child to accept Islam. Known for his immense knowledge, wisdom, and bravery on the battlefield.',
+                        'A paragon of wisdom and justice; his sermons and letters are studied for their eloquence and depth.'
+                    )}
+                </div>
+            `,
+            scholars: `
+                <h2 class="text-3xl font-bold text-slate-800 mb-6 border-b pb-4">Scholars & Scientists</h2>
+                <div class="bg-violet-50 p-6 rounded-xl border-l-4 border-violet-500 mb-8">
+                    <p class="text-lg">The Islamic Golden Age saw the rise of polymaths who advanced philosophy, medicine, and mathematics, bridging the gap between ancient wisdom and the modern world.</p>
+                </div>
+                <div class="grid gap-6 md:grid-cols-2">
+                    ${generatePersonalityCard(
+                        'Al-Ghazali',
+                        'The Proof of Islam',
+                        'A Persian theologian, jurist, and philosopher. He reconciled legalistic Islam with Sufi spirituality. His work "The Revival of the Religious Sciences" is a masterpiece.',
+                        'Refuted Greek philosophy where it contradicted Islam and revitalized spiritual practice within the orthodox framework.'
+                    )}
+                    ${generatePersonalityCard(
+                        'Ibn Sina (Avicenna)',
+                        'Prince of Physicians',
+                        'A Persian polymath regarded as one of the most significant physicians, astronomers, and philosophers of the Islamic Golden Age.',
+                        'Authored "The Canon of Medicine", which remained a standard medical text in European universities until 1650.'
+                    )}
+                    ${generatePersonalityCard(
+                        'Al-Khwarizmi',
+                        'Father of Algebra',
+                        'A Persian mathematician and astronomer in the House of Wisdom in Baghdad. The word "Algorithm" is derived from his name.',
+                        'Developed the systematic solution of linear and quadratic equations (Algebra) and introduced Hindu-Arabic numerals to the West.'
+                    )}
+                    ${generatePersonalityCard(
+                        'Ibn Rushd (Averroes)',
+                        'The Commentator',
+                        'An Andalusian polymath, judge, and physician. He is famous for his commentaries on Aristotle, which sparked an intellectual revival in Europe.',
+                        'Defended philosophy as compatible with religion and heavily influenced Medieval European thought.'
+                    )}
+                    ${generatePersonalityCard(
+                        'Al-Biruni',
+                        'The Anthropologist',
+                        'A Persian scholar who made major contributions to physics, astronomy, and history. He traveled to India and wrote the first objective anthropological study of Hindu culture.',
+                        'Calculated the radius of the Earth with astounding accuracy and pioneered the study of comparative religion.'
+                    )}
+                    ${generatePersonalityCard(
+                        'Al-Zahrawi (Abulcasis)',
+                        'Father of Surgery',
+                        'An Arab physician from Cordoba. He wrote "Al-Tasrif", a medical encyclopedia that changed the course of surgery.',
+                        'Invented over 200 surgical instruments (many still used today) and pioneered the use of catgut for internal stitches.'
+                    )}
+                </div>
+            `,
+            leaders: `
+                <h2 class="text-3xl font-bold text-slate-800 mb-6 border-b pb-4">Military & Political Leaders</h2>
+                <div class="bg-violet-50 p-6 rounded-xl border-l-4 border-violet-500 mb-8">
+                    <p class="text-lg">From military geniuses to empire builders and explorers, these figures expanded the horizons of the Islamic world.</p>
+                </div>
+                <div class="grid gap-6 md:grid-cols-2">
+                    ${generatePersonalityCard(
+                        'Khalid ibn al-Walid',
+                        'The Sword of Allah',
+                        'A military commander for the Prophet and the Rashidun Caliphs. He famously never lost a battle in his life, commanding forces at Yarmouk and the Ridda Wars.',
+                        'His tactical genius was crucial in the unification of Arabia and the early expansion into Persia and the Levant.'
+                    )}
+                    ${generatePersonalityCard(
+                        'Salah al-Din (Saladin)',
+                        'Sultan of Egypt & Syria',
+                        'The founder of the Ayyubid dynasty. He is celebrated in both the East and West for his chivalry, justice, and military prowess during the Crusades.',
+                        'Recaptured Jerusalem in 1187 and treated the defeated Crusaders with mercy, contrasting with previous conquests.'
+                    )}
+                    ${generatePersonalityCard(
+                        'Harun al-Rashid',
+                        'Abbasid Caliph',
+                        'The fifth Abbasid Caliph, whose reign is associated with the peak of the Islamic Golden Age. He established the legendary library, Bayt al-Hikmah (House of Wisdom).',
+                        'Patronized arts and sciences, making Baghdad the global center of knowledge, and maintained diplomatic ties with Charlemagne.'
+                    )}
+                    ${generatePersonalityCard(
+                        'Osman Gazi',
+                        'Founder of Ottoman Empire',
+                        'A leader of the Turkish tribes in Anatolia. His principality grew into a world empire that lasted for over 600 years.',
+                        'Established the foundations of the Ottoman state which became the primary superpower of the Muslim world for centuries.'
+                    )}
+                    ${generatePersonalityCard(
+                        'Ibn Battuta',
+                        'The Great Explorer',
+                        'A Moroccan scholar and explorer who traveled more than any other explorer in pre-modern history, covering 75,000 miles across Africa, Asia, and Europe.',
+                        'Documented the social, cultural, and political life of the 14th-century Muslim world in his famous book, "The Rihla".'
+                    )}
+                </div>
+            `,
+            mystics: `
+                <h2 class="text-3xl font-bold text-slate-800 mb-6 border-b pb-4">Mystics & Poets</h2>
+                <div class="bg-violet-50 p-6 rounded-xl border-l-4 border-violet-500 mb-8">
+                    <p class="text-lg">Spiritual masters who emphasized the inner dimension of Islam, focusing on the purification of the heart and the love of the Divine.</p>
+                </div>
+                <div class="grid gap-6 md:grid-cols-2">
+                    ${generatePersonalityCard(
+                        'Rabi\'a al-Adawiyya',
+                        'Mother of Sufism',
+                        'An early female mystic from Basra. She introduced the concept of Divine Love (Mahabbah) — worshipping God not out of fear of Hell or desire for Paradise, but for His own sake.',
+                        'Her poetry and teachings shifted the focus of asceticism from fear to pure love and intimacy with Allah.'
+                    )}
+                    ${generatePersonalityCard(
+                        'Jalal al-Din Rumi',
+                        'Master of Love',
+                        'A 13th-century Persian poet, jurist, and Sufi mystic. His spiritual legacy is enshrined in the "Masnavi", a massive collection of poetry teaching Sufi concepts.',
+                        'His poetry transcends borders and languages, teaching that the human soul is constantly longing to return to its Creator.'
+                    )}
+                </div>
+            `,
+
+            // --- TOOLS CONTENT ---
+            prayer_times: `
+                <h2 class="text-3xl font-bold text-slate-800 mb-6 border-b pb-4">Prayer Times (Salah)</h2>
+                <div class="bg-teal-50 p-6 rounded-xl border-l-4 border-teal-500 mb-8">
+                    <p class="text-lg">Accurate prayer times calculated based on your location. (Simulated for this demo)</p>
+                </div>
+
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div class="bg-slate-900 text-white rounded-2xl p-8 text-center shadow-xl relative overflow-hidden">
+                        <div class="absolute top-0 right-0 p-4 opacity-20"><svg xmlns="http://www.w3.org/2000/svg" class="w-24 h-24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+                        <p class="text-teal-400 font-bold tracking-widest uppercase mb-2">Next Prayer</p>
+                        <h3 class="text-5xl font-bold mb-4">Asr</h3>
+                        <p class="text-2xl text-slate-300">3:45 PM</p>
+                        <p class="text-sm text-slate-500 mt-6">Location: London, UK (Demo)</p>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow border border-slate-200 overflow-hidden">
+                        <div class="p-4 border-b flex justify-between items-center bg-gray-50">
+                            <span class="font-bold text-slate-700">Prayer</span>
+                            <span class="font-bold text-slate-700">Time</span>
+                            <span class="font-bold text-slate-700">Notification</span>
+                        </div>
+                        <ul class="divide-y divide-slate-100">
+                            <li class="p-4 flex justify-between items-center"><span>Fajr</span> <span>04:15 AM</span> <span class="text-teal-600">🔔 On</span></li>
+                            <li class="p-4 flex justify-between items-center"><span>Sunrise</span> <span>05:45 AM</span> <span class="text-slate-400">-</span></li>
+                            <li class="p-4 flex justify-between items-center"><span>Dhuhr</span> <span>01:15 PM</span> <span class="text-teal-600">🔔 On</span></li>
+                            <li class="p-4 flex justify-between items-center bg-teal-50 font-bold text-teal-800"><span>Asr</span> <span>03:45 PM</span> <span class="text-teal-600">🔔 On</span></li>
+                            <li class="p-4 flex justify-between items-center"><span>Maghrib</span> <span>07:50 PM</span> <span class="text-teal-600">🔔 On</span></li>
+                            <li class="p-4 flex justify-between items-center"><span>Isha</span> <span>09:20 PM</span> <span class="text-teal-600">🔔 On</span></li>
+                        </ul>
+                    </div>
+                </div>
+             `,
+            qibla: `
+                <h2 class="text-3xl font-bold text-slate-800 mb-6 border-b pb-4">Qibla Compass</h2>
+                <div class="text-center py-10">
+                    <p class="text-lg text-slate-600 mb-8">Locate the direction of the Kaaba (Mecca) from anywhere in the world.</p>
+
+                    <div class="relative w-64 h-64 mx-auto mb-8">
+                        <div class="absolute inset-0 border-4 border-slate-200 rounded-full"></div>
+                        <div class="absolute inset-0 border-t-4 border-teal-500 rounded-full compass-spin"></div>
+
+                        <div class="absolute inset-2 bg-white rounded-full shadow-inner flex items-center justify-center">
+                            <span class="absolute top-2 text-xs font-bold text-slate-400">N</span>
+                            <span class="absolute bottom-2 text-xs font-bold text-slate-400">S</span>
+                            <span class="absolute left-2 text-xs font-bold text-slate-400">W</span>
+                            <span class="absolute right-2 text-xs font-bold text-slate-400">E</span>
+
+                            <div class="text-4xl">🕋</div>
+                        </div>
+
+                        <div class="absolute top-1/2 left-1/2 w-1 h-24 bg-red-500 origin-bottom -translate-x-1/2 -translate-y-full transform -rotate-45" style="border-radius: 4px 4px 0 0;"></div>
+                    </div>
+
+                    <button class="bg-teal-600 text-white px-6 py-2 rounded-lg hover:bg-teal-700 transition">Calibrate Compass</button>
+                    <p class="text-xs text-slate-400 mt-4">Please enable GPS for accurate direction.</p>
+                </div>
+             `,
+            quran: `
+                <h2 class="text-3xl font-bold text-slate-800 mb-6 border-b pb-4">The Holy Quran</h2>
+                <div class="flex flex-col md:flex-row gap-6">
+                    <div class="w-full md:w-1/3 bg-slate-50 p-4 rounded-xl h-fit">
+                        <input type="text" placeholder="Search Surah..." class="w-full p-2 border rounded-lg mb-4">
+                        <div class="space-y-2">
+                            <button class="w-full text-left p-2 bg-white rounded shadow-sm hover:bg-teal-50 border-l-4 border-teal-500">1. Al-Fatihah</button>
+                            <button class="w-full text-left p-2 bg-white rounded shadow-sm hover:bg-teal-50">2. Al-Baqarah</button>
+                            <button class="w-full text-left p-2 bg-white rounded shadow-sm hover:bg-teal-50">3. Ali 'Imran</button>
+                            <button class="w-full text-left p-2 bg-white rounded shadow-sm hover:bg-teal-50">4. An-Nisa</button>
+                            <button class="w-full text-left p-2 bg-white rounded shadow-sm hover:bg-teal-50">18. Al-Kahf</button>
+                            <button class="w-full text-left p-2 bg-white rounded shadow-sm hover:bg-teal-50">36. Ya-Sin</button>
+                        </div>
+                    </div>
+
+                    <div class="w-full md:w-2/3">
+                        <div class="bg-white border rounded-xl shadow-sm p-8 text-center">
+                            <h3 class="text-2xl font-bold mb-2">Surah Al-Fatihah</h3>
+                            <p class="text-slate-500 mb-6">The Opening • Meccan • 7 Verses</p>
+
+                            <div class="space-y-6">
+                                <div>
+                                    <p class="arabic-text text-3xl mb-2 leading-relaxed">بِسْمِ ٱللَّٰهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ</p>
+                                    <p class="text-slate-600 italic">In the name of Allah, the Entirely Merciful, the Especially Merciful.</p>
+                                </div>
+                                <div>
+                                    <p class="arabic-text text-3xl mb-2 leading-relaxed">ٱلْحَمْدُ لِلَّٰهِ رَبِّ ٱلْعَالَمِينَ</p>
+                                    <p class="text-slate-600 italic">All praise is due to Allah, Lord of the worlds.</p>
+                                </div>
+                                <div class="mt-8 pt-4 border-t flex items-center justify-center space-x-4">
+                                    <button class="p-2 rounded-full bg-slate-100 hover:bg-slate-200">⏪</button>
+                                    <button class="p-4 rounded-full bg-teal-600 text-white hover:bg-teal-700">▶ Play</button>
+                                    <button class="p-2 rounded-full bg-slate-100 hover:bg-slate-200">⏩</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+             `,
+            calendar: `
+                <h2 class="text-3xl font-bold text-slate-800 mb-6 border-b pb-4">Islamic Calendar (Hijri)</h2>
+                <div class="bg-white p-6 rounded-xl shadow border text-center">
+                    <div class="flex justify-between items-center mb-8">
+                        <button class="text-slate-400 hover:text-slate-800">&larr; Prev Month</button>
+                        <div>
+                            <h3 class="text-2xl font-bold text-teal-700">Ramadan 1445 AH</h3>
+                            <p class="text-slate-500">March/April 2024</p>
+                        </div>
+                        <button class="text-slate-400 hover:text-slate-800">Next Month &rarr;</button>
+                    </div>
+
+                    <div class="grid grid-cols-7 gap-2 mb-2 font-bold text-slate-600">
+                        <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
+                    </div>
+                    <div class="grid grid-cols-7 gap-2">
+                        <div class="p-4 bg-slate-50 rounded text-slate-300">29</div>
+                        <div class="p-4 bg-slate-50 rounded text-slate-300">30</div>
+                        <div class="p-4 bg-teal-50 rounded border border-teal-100 font-bold text-teal-800">1</div>
+                        <div class="p-4 bg-white rounded border hover:bg-slate-50">2</div>
+                        <div class="p-4 bg-white rounded border hover:bg-slate-50">3</div>
+                        <div class="p-4 bg-white rounded border hover:bg-slate-50 text-teal-600">4</div>
+                        <div class="p-4 bg-white rounded border hover:bg-slate-50">5</div>
+                        <!-- More days would be here -->
+                    </div>
+
+                    <div class="mt-8 text-left bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+                        <h4 class="font-bold text-yellow-800 mb-2">Upcoming Events</h4>
+                        <ul class="list-disc pl-5 text-yellow-900">
+                            <li><strong>1st Ramadan:</strong> Beginning of Fasting</li>
+                            <li><strong>27th Ramadan:</strong> Laylat al-Qadr (Night of Decree)</li>
+                        </ul>
+                    </div>
+                </div>
+             `,
+            duas: `
+                <h2 class="text-3xl font-bold text-slate-800 mb-6 border-b pb-4">Duas (Supplications) & Zikr</h2>
+                <div class="grid md:grid-cols-2 gap-4">
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                        <h3 class="text-lg font-bold text-teal-700 mb-2">Morning & Evening</h3>
+                        <p class="arabic-text text-xl mb-2">سُبْحَانَ اللهِ وَبِحَمْدِهِ</p>
+                        <p class="text-sm italic text-slate-600">"Glory is to Allah and praise is to Him." (100 times)</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                        <h3 class="text-lg font-bold text-teal-700 mb-2">Leaving the House</h3>
+                        <p class="arabic-text text-xl mb-2">بِسْمِ اللّٰهِ تَوَكَّلْتُ عَلَى اللّٰهِ</p>
+                        <p class="text-sm italic text-slate-600">"In the name of Allah, I place my trust in Allah."</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                        <h3 class="text-lg font-bold text-teal-700 mb-2">For Forgiveness</h3>
+                        <p class="arabic-text text-xl mb-2">أَسْتَغْفِرُ اللّٰهَ</p>
+                        <p class="text-sm italic text-slate-600">"I seek forgiveness from Allah."</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                        <h3 class="text-lg font-bold text-teal-700 mb-2">Before Sleeping</h3>
+                        <p class="arabic-text text-xl mb-2">بِاسْمِكَ اللَّهُمَّ أَمُوتُ وَأَحْيَا</p>
+                        <p class="text-sm italic text-slate-600">"In Your Name, O Allah, I die and I live."</p>
+                    </div>
+                </div>
+
+                <h3 class="text-2xl font-bold text-slate-800 mt-8 mb-4">Digital Tasbih</h3>
+                <div class="bg-slate-900 text-white p-8 rounded-full w-48 h-48 mx-auto flex flex-col items-center justify-center shadow-2xl cursor-pointer hover:scale-105 transition" onclick="alert('Count +1 (Simulated)')">
+                    <span class="text-4xl font-mono">00</span>
+                    <span class="text-xs text-slate-400 mt-2">Tap to Count</span>
+                </div>
+             `,
+            events: `
+                <h2 class="text-3xl font-bold text-slate-800 mb-6 border-b pb-4">Islamic Events & Holidays</h2>
+                <div class="relative border-l-4 border-teal-200 ml-4 space-y-8">
+                    <div class="mb-8 ml-6 relative">
+                        <span class="absolute -left-10 top-0 bg-teal-500 w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm">1</span>
+                        <h3 class="text-xl font-bold text-slate-800">Eid al-Fitr</h3>
+                        <p class="text-sm text-slate-500">1st Shawwal</p>
+                        <p class="mt-2 text-slate-600">Celebration marking the end of Ramadan. A day of joy, prayer, and charity (Zakat al-Fitr).</p>
+                    </div>
+                    <div class="mb-8 ml-6 relative">
+                         <span class="absolute -left-10 top-0 bg-teal-500 w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm">2</span>
+                        <h3 class="text-xl font-bold text-slate-800">Day of Arafah</h3>
+                        <p class="text-sm text-slate-500">9th Dhul-Hijjah</p>
+                        <p class="mt-2 text-slate-600">The pinnacle of Hajj. Fasting on this day expiates sins of the previous and coming year.</p>
+                    </div>
+                    <div class="mb-8 ml-6 relative">
+                         <span class="absolute -left-10 top-0 bg-teal-500 w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm">3</span>
+                        <h3 class="text-xl font-bold text-slate-800">Eid al-Adha</h3>
+                        <p class="text-sm text-slate-500">10th Dhul-Hijjah</p>
+                        <p class="mt-2 text-slate-600">Festival of Sacrifice, honoring Prophet Ibrahim's willingness to sacrifice his son. Meat is distributed to the poor.</p>
+                    </div>
+                    <div class="mb-8 ml-6 relative">
+                         <span class="absolute -left-10 top-0 bg-teal-500 w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm">4</span>
+                        <h3 class="text-xl font-bold text-slate-800">Islamic New Year</h3>
+                        <p class="text-sm text-slate-500">1st Muharram</p>
+                        <p class="mt-2 text-slate-600">Marks the Hijra (migration) of the Prophet from Mecca to Medina.</p>
+                    </div>
+                </div>
+             `,
+            zakat_calc: `
+                <h2 class="text-3xl font-bold text-slate-800 mb-6 border-b pb-4">Zakat Calculator</h2>
+                <div class="bg-white p-6 rounded-xl shadow-lg border border-slate-200 max-w-2xl mx-auto">
+                    <p class="mb-6 text-slate-600">Zakat is 2.5% of your total qualifying wealth held for one lunar year, provided it exceeds the Nisab threshold.</p>
+
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-bold text-slate-700 mb-1">Cash on Hand & Bank</label>
+                            <input type="number" id="zakat-cash" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-teal-500 outline-none" placeholder="0.00">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-slate-700 mb-1">Gold & Silver Value</label>
+                            <input type="number" id="zakat-gold" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-teal-500 outline-none" placeholder="0.00">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-slate-700 mb-1">Investments & Shares</label>
+                            <input type="number" id="zakat-invest" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-teal-500 outline-none" placeholder="0.00">
+                        </div>
+
+                        <div class="pt-4 border-t">
+                             <label class="block text-sm font-bold text-red-700 mb-1">Liabilities / Debts (Deductible)</label>
+                            <input type="number" id="zakat-debt" class="w-full p-3 border border-red-200 bg-red-50 rounded-lg focus:ring-2 focus:ring-red-500 outline-none" placeholder="0.00">
+                        </div>
+
+                        <button onclick="calculateZakat()" class="w-full bg-teal-600 text-white font-bold py-3 rounded-lg hover:bg-teal-700 transition mt-4">Calculate Zakat</button>
+                    </div>
+
+                    <div id="zakat-result" class="mt-6 hidden p-4 bg-teal-50 border border-teal-200 rounded-lg text-center">
+                        <p class="text-sm text-teal-800">Your Total Payable Zakat:</p>
+                        <h3 class="text-3xl font-bold text-teal-700 mt-2" id="zakat-total">$0.00</h3>
+                    </div>
+                </div>
+             `,
+            halal: `
+                <h2 class="text-3xl font-bold text-slate-800 mb-6 border-b pb-4">Halal Scanner</h2>
+                <div class="text-center max-w-md mx-auto">
+                    <div class="bg-black rounded-3xl overflow-hidden shadow-2xl relative aspect-[9/16] mb-6 flex flex-col items-center justify-center">
+                        <div class="absolute inset-0 border-4 border-slate-800 z-10 rounded-3xl pointer-events-none"></div>
+                        <div class="w-64 h-64 border-2 border-white/50 rounded-lg relative">
+                            <div class="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-teal-400"></div>
+                            <div class="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-teal-400"></div>
+                            <div class="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-teal-400"></div>
+                            <div class="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-teal-400"></div>
+                            <div class="absolute top-1/2 w-full h-0.5 bg-red-500/50 shadow-[0_0_10px_red] animate-pulse"></div>
+                        </div>
+                        <p class="text-white mt-8 text-sm">Align barcode within frame</p>
+                    </div>
+
+                    <button class="w-full bg-teal-600 text-white font-bold py-4 rounded-xl shadow-lg hover:bg-teal-700 transition flex items-center justify-center space-x-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/></svg>
+                        <span>Scan Product</span>
+                    </button>
+
+                    <p class="text-xs text-slate-400 mt-4">Database checks for alcohol, pork by-products, and non-halal additives.</p>
+                </div>
+             `
+        };
+
+        // --- APP STATE ---
+
+        let currentView = 'home';
+        let currentTopicId = null;
+        let currentSubtopicId = null;
+        const appRoot = document.getElementById('app-root');
+
+        const getTopic = (id) => TOPICS.find(t => t.id === id);
+
+        function getNavigationButtons() {
+            const subtopics = SUBTOPICS[currentTopicId];
+            const currentIndex = subtopics.findIndex(s => s.id === currentSubtopicId);
+            const prevId = currentIndex > 0 ? subtopics[currentIndex - 1].id : null;
+            const nextId = currentIndex < subtopics.length - 1 ? subtopics[currentIndex + 1].id : null;
+
+            return `
+                <div class="flex justify-between mt-12 pt-6 border-t border-slate-200">
+                    ${prevId ? `<button onclick="changeSubtopic('${prevId}')" class="text-teal-600 hover:text-teal-800 font-medium flex items-center"><svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg> Previous</button>` : '<span></span>'}
+                    ${nextId ? `<button onclick="changeSubtopic('${nextId}')" class="text-teal-600 hover:text-teal-800 font-medium flex items-center">Next <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 ml-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></button>` : '<span></span>'}
+                </div>
+            `;
+        }
+
+        function renderContent() {
+            const contentHtml = CONTENT[currentSubtopicId] || `<div class="text-center py-12 text-slate-500"><p>Content loading...</p></div>`;
+            return contentHtml + getNavigationButtons();
+        }
+
+        function renderHomeView() {
+            return `
+                <header class="p-4 shadow-lg bg-slate-900 text-white flex-shrink-0">
+                    <h1 class="text-3xl font-extrabold flex items-center space-x-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                        <span>The Islamic Guidebook</span>
+                    </h1>
+                    <p class="text-sm text-slate-400 mt-1">Foundations of faith, worship, history, and daily tools.</p>
+                </header>
+                <main class="flex-1 p-6 md:p-12 overflow-y-auto custom-scroll bg-gray-50 fade-in">
+                    <div class="max-w-7xl mx-auto">
+                        <h2 class="text-4xl font-extrabold text-slate-800 mb-10 text-center arabic-text">مرحبًا بك (Welcome)</h2>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 pb-12">
+                            ${TOPICS.map(t => `
+                                <button onclick="changeTopic('${t.id}')"
+                                        class="p-6 ${t.lightColor} rounded-2xl shadow-xl transition transform hover:scale-[1.02] duration-300 border-b-4 ${t.color.replace('bg-', 'border-')} flex flex-col items-center text-center group h-full justify-between">
+                                    <div class="flex flex-col items-center">
+                                        <div class="p-4 ${t.color} text-white rounded-full mb-4 shadow-lg group-hover:shadow-2xl transition duration-300">
+                                            ${t.icon.replace(/w-12 h-12/, 'w-8 h-8')}
+                                        </div>
+                                        <h3 class="text-xl font-bold ${t.textColor} mb-2">${t.title}</h3>
+                                        <p class="text-sm text-slate-700 font-medium mb-3">${t.subtitle}</p>
+                                        <p class="text-xs text-slate-600 line-clamp-3">${t.desc}</p>
+                                    </div>
+                                    <span class="mt-4 pt-4 text-xs font-semibold ${t.textColor} flex items-center">
+                                        Open Section
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3 ml-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                                    </span>
+                                </button>
+                            `).join('')}
+                        </div>
+                    </div>
+                </main>
+            `;
+        }
+
+        function renderContentView() {
+            const currentTopic = getTopic(currentTopicId);
+            if (!currentTopic) { currentView = 'home'; return renderHomeView(); }
+
+            const subtopics = SUBTOPICS[currentTopicId];
+            const topicColor = currentTopic.color.replace('bg-', 'text-');
+
+            // Sidebar List Generation
+            const subtopicListHtml = subtopics.map(sub => `
+                <li class="mb-2">
+                    <button id="btn-${sub.id}" onclick="changeSubtopic('${sub.id}')"
+                            class="w-full text-left py-2 px-4 rounded-lg transition duration-150 ${currentSubtopicId === sub.id ? `font-semibold ${topicColor} bg-white shadow-md` : 'text-slate-600 hover:bg-white hover:shadow-sm'} focus:outline-none">
+                        ${sub.title}
+                    </button>
+                </li>
+            `).join('');
+
+            return `
+                <header class="p-4 shadow-lg ${currentTopic.color} text-white flex items-center justify-between flex-shrink-0 z-20">
+                    <h1 class="text-xl md:text-2xl font-extrabold flex items-center space-x-3">
+                        <button onclick="goHome()" class="text-white hover:text-opacity-80 transition p-2 rounded-full hover:bg-black hover:bg-opacity-10 mr-2" title="Go Home">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                        </button>
+                        ${currentTopic.icon.replace(/w-12 h-12/, 'w-6 h-6')}
+                        <span class="truncate">${currentTopic.title}</span>
+                    </h1>
+                </header>
+                <div class="flex-1 flex overflow-hidden">
+                    <aside id="sidebar-nav" class="w-full md:w-1/4 lg:w-1/5 ${currentTopic.lightColor} p-4 flex flex-col overflow-y-auto custom-scroll shadow-xl flex-shrink-0 z-10 hidden md:flex">
+                        <div class="mb-6 space-y-2 border-b pb-4 border-opacity-30 border-slate-300">
+                            <button onclick="goHome()" class="flex items-center text-sm font-bold text-slate-500 hover:text-slate-800 mb-4">
+                                &larr; Back to Home
+                            </button>
+                            <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Modules</p>
+                            ${TOPICS.map(t => `
+                                <button onclick="changeTopic('${t.id}', true)"
+                                        class="w-full py-2 px-3 text-sm rounded-lg flex items-center transition duration-150 ${t.id === currentTopicId ? `font-bold ${t.color.replace('bg-', 'bg-')} text-white shadow-md` : 'text-slate-700 hover:bg-white'}">
+                                    ${t.icon.replace(/w-12 h-12/, 'w-4 h-4 mr-2')}
+                                    ${t.title}
+                                </button>
+                            `).join('')}
+                        </div>
+                        <nav class="flex-1">
+                            <h3 class="text-lg font-semibold ${currentTopic.textColor} mb-3 border-b border-opacity-30 pb-2 border-current">Contents</h3>
+                            <ul class="space-y-1 list-none p-0">
+                                ${subtopicListHtml}
+                            </ul>
+                        </nav>
+                    </aside>
+
+                    <main id="main-content-area" class="flex-1 p-6 md:p-8 overflow-y-auto custom-scroll bg-white relative w-full">
+                        <div class="max-w-4xl mx-auto fade-in">
+                            ${renderContent()}
+                            <div class="mt-8 text-center text-slate-400 text-sm pb-8">
+                                The Islamic Guidebook v2.0
+                            </div>
+                        </div>
+                    </main>
+                </div>
+            `;
+        }
+
+        function renderApp() {
+            appRoot.innerHTML = '';
+            appRoot.innerHTML = currentView === 'home' ? renderHomeView() : renderContentView();
+
+            // Re-attach scripts if needed (for Zakat calculator to work after innerHTML replacement)
+        }
+
+        function changeTopic(topicId, fromSidebar = false) {
+            currentTopicId = topicId;
+            currentSubtopicId = SUBTOPICS[topicId][0].id;
+            if (currentView === 'home' || !fromSidebar) { currentView = 'content'; }
+            renderApp();
+        }
+
+        // --- FIXED SUBTOPIC CHANGE (Preserves Sidebar Scroll) ---
+        function changeSubtopic(subtopicId) {
+            currentSubtopicId = subtopicId;
+
+            const mainContentArea = document.getElementById('main-content-area');
+            if (mainContentArea) {
+                // 1. Update Main Content
+                mainContentArea.innerHTML = `
+                    <div class="max-w-4xl mx-auto fade-in">
+                        ${renderContent()}
+                        <div class="mt-8 text-center text-slate-400 text-sm pb-8">The Islamic Guidebook v2.0</div>
+                    </div>
+                `;
+                mainContentArea.scrollTop = 0; // Scroll main content to top
+
+                // 2. Update Sidebar Active State
+                const currentTopic = getTopic(currentTopicId);
+                const topicColor = currentTopic.color.replace('bg-', 'text-');
+
+                // Reset all buttons
+                SUBTOPICS[currentTopicId].forEach(sub => {
+                    const btn = document.getElementById(`btn-${sub.id}`);
+                    if (btn) {
+                        btn.className = `w-full text-left py-2 px-4 rounded-lg transition duration-150 text-slate-600 hover:bg-white hover:shadow-sm focus:outline-none`;
+                    }
+                });
+
+                // Highlight active button
+                const activeBtn = document.getElementById(`btn-${subtopicId}`);
+                if (activeBtn) {
+                    activeBtn.className = `w-full text-left py-2 px-4 rounded-lg transition duration-150 font-semibold ${topicColor} bg-white shadow-md focus:outline-none`;
+                }
+            } else {
+                // Fallback if something is wrong
+                renderApp();
+            }
+        }
+
+        function goHome() {
+            currentView = 'home';
+            currentTopicId = null;
+            currentSubtopicId = null;
+            renderApp();
+        }
+
+        // Global function for Zakat Calc to ensure availability
+        window.calculateZakat = function() {
+            const cash = parseFloat(document.getElementById('zakat-cash').value) || 0;
+            const gold = parseFloat(document.getElementById('zakat-gold').value) || 0;
+            const invest = parseFloat(document.getElementById('zakat-invest').value) || 0;
+            const debt = parseFloat(document.getElementById('zakat-debt').value) || 0;
+            const netAssets = (cash + gold + invest) - debt;
+            const zakat = netAssets > 0 ? (netAssets * 0.025) : 0;
+            const resultBox = document.getElementById('zakat-result');
+            const totalText = document.getElementById('zakat-total');
+
+            if(resultBox && totalText) {
+                totalText.innerText = '$' + zakat.toFixed(2);
+                resultBox.classList.remove('hidden');
+            }
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            if (!currentTopicId) { currentView = 'home'; }
+            renderApp();
+        });
+    </script>
+</body>
+</html>
